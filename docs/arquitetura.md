@@ -1,7 +1,7 @@
 # Papo: a stack (como o app foi construído)
 
 Este documento explica **com quê** o Papo foi feito, **como cada parte funciona** e **por que** escolhemos cada ferramenta. Foi escrito para quem não é programador, mas tem os detalhes técnicos para quem quiser continuar o projeto.
-Complementa o `PROJETO-PAPO.md` (o que fizemos, como instalar e usar). Versão do app: **0.6.0**.
+Complementa a [visão geral](visao-geral.md) (o que fizemos) e a [instalação](instalacao.md) (como instalar e usar). Versão do app: **0.6.0**.
 
 ---
 
@@ -78,7 +78,7 @@ Imagine o Papo como um restaurante:
 | `src/voice.ts` | Entrar na sala de voz, microfone, câmera, tela, volumes (usa LiveKit) |
 | `src/VoiceRoom.tsx` | Os blocos de vídeo, ampliar, tela cheia, barrinha de volume |
 | `src/AudioSettings.tsx` | Tela de áudio: medidor, filtros, ganho, calibração |
-| `src/audio/*` | Cadeia de tratamento do microfone (seção 7) |
+| `src/audio/*` | Cadeia de tratamento do microfone (veja abaixo, "Tratamento do microfone") |
 
 ---
 
@@ -331,6 +331,6 @@ Arquivos em `electron/`:
 ### Limites conhecidos da stack
 
 - **SQLite** aguenta bem um grupo pequeno; não foi feito para milhares de usuários simultâneos.
-- **O anfitrião é o servidor:** se o PC dele desliga, o Papo cai (ver o `PROJETO-PAPO.md`).
+- **O anfitrião é o servidor:** se o PC dele desliga, o Papo cai (veja [visão geral](visao-geral.md#limites-importantes)).
 - **Electron é pesado** (cerca de 426 MB instalado).
 - **O servidor embutido usa `node:sqlite`**, que o Node ainda marca como experimental. Funciona bem, mas pode mudar em versões futuras do Node.

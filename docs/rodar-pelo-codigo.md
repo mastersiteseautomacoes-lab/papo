@@ -1,6 +1,6 @@
-# Papo
+# Rodar pelo código (sem o app instalado)
 
-Chat estilo Discord para uso pessoal. Texto em tempo real já funciona; voz e vídeo (LiveKit) são a próxima etapa.
+Este guia é para quem roda o Papo direto do código, pelo navegador. Para usar o app instalado, veja [instalacao.md](instalacao.md).
 
 ## Rodar no seu PC
 
