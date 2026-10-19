@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:" />
+  <title>Papo</title>
+  <link rel="stylesheet" href="launcher.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <img src="logo.png" alt="" width="96" height="96" class="logo" />
+      <h1>Papo</h1>
+      <p>Escolha como quer usar hoje.</p>
+    </header>
+
+    <section class="cards">
+      <article class="card" id="host-card">
+        <h2>Hospedar</h2>
+        <p class="muted">Liga o servidor neste computador e publica pelo Tailscale. Seus amigos entram com o endereço que aparecer aqui. Fica ligado só enquanto o Papo estiver aberto.</p>
+        <div id="host-idle">
+          <button class="primary" id="host-start">Hospedar agora</button>
+        </div>
+        <div id="host-running" hidden>
+          <label>Endereço para os amigos
+            <div class="code-box"><code id="host-url"></code><button class="ghost" id="host-copy" type="button">Copiar</button></div>
+          </label>
+          <p class="warn" id="host-warn" hidden></p>
+          <div class="row">
+            <button class="primary" id="host-open">Abrir o Papo</button>
+            <button class="ghost" id="host-stop">Parar</button>
+          </div>
+        </div>
+        <p class="error" id="host-error" role="alert" hidden></p>
+      </article>
+
+      <article class="card" id="join-card">
+        <h2>Entrar</h2>
+        <p class="muted">Cole o endereço que um amigo que está hospedando te enviou. Você precisa estar com o Tailscale ligado e ter aceitado o compartilhamento do computador dele.</p>
+        <form id="join-form">
+          <label>Endereço do servidor
+            <input id="join-address" placeholder="https://pc-do-amigo.tailXXXX.ts.net" autocomplete="off" spellcheck="false" />
+          </label>
+          <button class="primary" id="join-submit">Entrar</button>
+        </form>
+        <p class="error" id="join-error" role="alert" hidden></p>
+      </article>
+    </section>
+
+    <section class="card friends" id="friends-card">
+      <div class="friends-head">
+        <h2>Amigos</h2>
+        <button class="ghost small" id="friends-refresh" type="button">Atualizar</button>
+      </div>
+      <p class="muted">Salve o endereço do servidor de cada amigo. O Papo confere de 30 em 30 segundos quem está no ar e avisa quando um servidor ficar online, mesmo com a janela escondida na bandeja.</p>
+      <ul id="friends-list" class="friends-list"></ul>
+      <p class="muted" id="friends-empty">Nenhum amigo salvo ainda.</p>
+      <form id="friend-form" class="friend-form">
+        <input id="friend-name" placeholder="Nome (ex.: Bruno)" maxlength="40" autocomplete="off" />
+        <input id="friend-address" placeholder="https://pc-do-amigo.tailXXXX.ts.net" autocomplete="off" spellcheck="false" />
+        <button class="primary">Adicionar</button>
+      </form>
+      <p class="error" id="friend-error" role="alert" hidden></p>
+    </section>
+  </main>
+  <script src="launcher.js"></script>
+</body>
+</html>
