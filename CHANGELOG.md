@@ -2,6 +2,15 @@
 
 Todas as mudanças importantes do Papo. A versão vem de `version` no `package.json`.
 
+## 0.6.1 (2026-10-24)
+
+Correção encontrada no primeiro teste entre dois computadores: um amigo salvou o servidor de outro, a lista mostrou "fora do ar" sem explicar e, ao clicar em Entrar, a janela ficou preta.
+
+### Corrigido
+- **Tela preta ao entrar:** agora o app confere se o servidor responde antes de abrir. Se não responde, a tela inicial mostra o motivo. Se a página falhar durante o carregamento, o app volta ao início com a explicação, em vez de ficar preto.
+- **"Fora do ar" sem explicação:** cada amigo fora do ar mostra o motivo (endereço não encontrado, sem resposta, conexão recusada, falha de HTTPS). O teste usa a mesma rede do navegador do app (proxy e certificados do Windows).
+- O botão **Entrar** mostra "Conectando…" enquanto confere.
+
 ## 0.6.0 (2026-10-19)
 
 ### Novo

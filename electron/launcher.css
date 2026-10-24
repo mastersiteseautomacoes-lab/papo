@@ -58,6 +58,8 @@ code { font-family: Consolas, monospace; font-size: 14px; color: var(--text-stro
 .friend .info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .friend .name { color: var(--text-strong); font-weight: 600; }
 .friend .addr { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.friend .why { color: var(--yellow); font-size: 12px; margin-top: 2px; }
+#load-error { margin-bottom: 16px; }
 .friend .state { color: var(--muted); font-size: 12px; flex: none; }
 .friend .state.on { color: #23a55a; }
 .friend button { height: 32px; }

@@ -1,5 +1,5 @@
 'use strict'
-const { app, BrowserWindow, Menu, Notification, Tray, clipboard, desktopCapturer, ipcMain, nativeImage, session, shell } = require('electron')
+const { app, BrowserWindow, Menu, Notification, Tray, clipboard, desktopCapturer, ipcMain, nativeImage, net: electronNet, session, shell } = require('electron')
 const crypto = require('node:crypto')
 const { execFile, fork } = require('node:child_process')
 const fs = require('node:fs')
@@ -228,39 +228,63 @@ function hostStop() {
 // ---------- Amigos (rastro de servidores no ar) ----------
 const FRIEND_POLL_MS = 30000
 const MAX_FRIENDS = 30
-/** @type {Map<string, boolean>} origem -> último estado conhecido (true = no ar) */
+/** @type {Map<string, { up: boolean, reason: string | null }>} origem -> último estado conhecido */
 const friendStatus = new Map()
 let friendTimer = null
+/** Último erro ao abrir um servidor; a tela inicial mostra uma vez e limpa. */
+let lastLoadError = null
+
+/** Traduz erros de rede (do Chromium ou do fetch) para um motivo que o usuário entenda. */
+function describeNetError(raw) {
+  const s = String(raw || '')
+  if (/NAME_NOT_RESOLVED|ENOTFOUND|ERR_ADDRESS_INVALID/i.test(s))
+    return 'Não achei esse endereço. Confira se o Tailscale está ligado neste computador e se o compartilhamento foi aceito.'
+  if (/TIMED_OUT|TimeoutError|AbortError|ETIMEDOUT|ERR_CONNECTION_RESET|ERR_CONNECTION_CLOSED/i.test(s))
+    return 'Sem resposta. O Papo do anfitrião precisa estar aberto em Hospedar, e o Tailscale ligado nos dois computadores.'
+  if (/CONNECTION_REFUSED|ECONNREFUSED/i.test(s))
+    return 'Conexão recusada. O computador responde, mas o Papo não está publicado nele (o anfitrião precisa clicar em Hospedar).'
+  if (/CERT|SSL|TLS|ERR_CONNECTION_FAILED|ERR_ADDRESS_UNREACHABLE|ERR_NETWORK_CHANGED|ENETUNREACH|EHOSTUNREACH/i.test(s))
+    return 'Não consegui uma conexão segura com esse endereço. Confira o Tailscale e se o HTTPS está ativo no painel dele.'
+  return `Falha ao conectar (${s.replace(/^net::/, '').slice(0, 80) || 'erro desconhecido'}).`
+}
 
 function readFriends() {
   const list = readConfig().friends
   return Array.isArray(list) ? list.filter((f) => f && typeof f.url === 'string' && typeof f.name === 'string') : []
 }
 
+// net.fetch usa a mesma rede do navegador do app (proxy e certificados do Windows), então o teste
+// se comporta como abrir a página de verdade.
 async function pingServer(origin) {
   try {
-    const r = await fetch(`${origin}/api/health`, { signal: AbortSignal.timeout(5000), redirect: 'error' })
-    return r.status < 500 // servidores de versões antigas respondem 404, mas estão no ar
-  } catch {
-    return false
+    const r = await electronNet.fetch(`${origin}/api/health`, { signal: AbortSignal.timeout(6000), redirect: 'error' })
+    // Servidores de versões antigas respondem 404 (sem /api/health), mas estão no ar.
+    return r.status < 500 ? { up: true, reason: null } : { up: false, reason: `O servidor respondeu com erro ${r.status}.` }
+  } catch (err) {
+    return { up: false, reason: describeNetError(err?.name === 'TimeoutError' ? 'TimeoutError' : err?.message || err) }
   }
 }
 
 function friendsSnapshot() {
-  return readFriends().map((f) => ({ ...f, online: friendStatus.get(f.url) ?? null }))
+  return readFriends().map((f) => {
+    const st = friendStatus.get(f.url)
+    return { ...f, online: st ? st.up : null, reason: st?.reason ?? null }
+  })
 }
 
 async function pollFriends() {
   const friends = readFriends()
   const own = hosting?.publicUrl ? new URL(hosting.publicUrl).origin : null
-  const results = await Promise.all(friends.map(async (f) => [f, f.url === own ? false : await pingServer(f.url)]))
+  const results = await Promise.all(friends.map(async (f) => [f, f.url === own
+    ? { up: false, reason: 'Este é o endereço do seu próprio servidor.' }
+    : await pingServer(f.url)]))
   const current = new Set(friends.map((f) => f.url))
   for (const url of [...friendStatus.keys()]) if (!current.has(url)) friendStatus.delete(url)
-  for (const [f, up] of results) {
+  for (const [f, res] of results) {
     const before = friendStatus.get(f.url)
-    friendStatus.set(f.url, up)
+    friendStatus.set(f.url, res)
     // Só avisa quando vimos o servidor cair e voltar; o primeiro teste da sessão é silencioso.
-    if (up && before === false && Notification.isSupported()) {
+    if (res.up && before && !before.up && Notification.isSupported()) {
       const n = new Notification({ title: `${f.name} está no ar`, body: 'O servidor dele no Papo acabou de ficar online. Clique para entrar.', icon: path.join(APP_ROOT, 'assets', 'icon.png') })
       n.on('click', () => { showWindow(); openChat(f.url) })
       n.show()
@@ -340,6 +364,19 @@ function createWindow() {
     }
   })
 
+  // Falhou ao abrir o servidor (sem rede, endereço errado, anfitrião desligado): volta ao início
+  // com o motivo, em vez de deixar uma tela preta.
+  win.webContents.on('did-fail-load', (_e, code, desc, url, isMainFrame) => {
+    if (!isMainFrame || code === -3 || !chatOrigin || url.startsWith('file:')) return // -3 = navegação cancelada
+    lastLoadError = { url: chatOrigin, message: describeNetError(desc) }
+    openLauncher()
+  })
+  win.webContents.on('render-process-gone', (_e, details) => {
+    if (!chatOrigin || details.reason === 'clean-exit') return
+    lastLoadError = { url: chatOrigin, message: `A página do servidor parou de funcionar (${details.reason}). Tente entrar de novo.` }
+    openLauncher()
+  })
+
   // Links externos abrem no navegador padrão; o app não sai do servidor atual.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/i.test(url)) shell.openExternal(url)
@@ -408,7 +445,9 @@ function fromLauncher(e) {
 ipcMain.handle('papo:state', (e) => {
   if (!fromLauncher(e)) return null
   const cfg = readConfig()
-  return { lastJoin: cfg.lastJoin || '', hosting, friends: friendsSnapshot() }
+  const loadError = lastLoadError
+  lastLoadError = null
+  return { lastJoin: cfg.lastJoin || '', hosting, friends: friendsSnapshot(), loadError }
 })
 ipcMain.handle('papo:friend-add', (e, name, address) => {
   if (!fromLauncher(e)) return { ok: false, error: 'negado' }
@@ -441,10 +480,13 @@ ipcMain.handle('papo:host-open', (e) => {
   openChat(hosting.localUrl)
   return true
 })
-ipcMain.handle('papo:join', (e, address) => {
+ipcMain.handle('papo:join', async (e, address) => {
   if (!fromLauncher(e)) return { ok: false, error: 'negado' }
   const origin = normalizeAddress(address)
   if (!origin) return { ok: false, error: 'Endereço inválido. Use algo como https://nome-do-pc.tailnet.ts.net' }
+  // Confere antes de abrir: se o servidor não responde, o motivo aparece aqui e não uma tela preta.
+  const probe = await pingServer(origin)
+  if (!probe.up) return { ok: false, error: probe.reason }
   writeConfig({ lastJoin: origin })
   openChat(origin)
   return { ok: true }

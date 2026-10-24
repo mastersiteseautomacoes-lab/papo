@@ -2,7 +2,7 @@
 
 ## Antes de tudo (só você, uma vez)
 
-1. Instale o Papo (`Papo Setup 0.6.0.exe`) e o **Tailscale** (tailscale.com/download), entrando com uma conta **pessoal e duradoura** (Google, Microsoft, Apple ou GitHub).
+1. Instale o Papo (`Papo Setup 0.6.1.exe`) e o **Tailscale** (tailscale.com/download), entrando com uma conta **pessoal e duradoura** (Google, Microsoft, Apple ou GitHub).
 2. No painel do Tailscale (login.tailscale.com), aba **DNS**, ative **HTTPS Certificates**. Sem isso o navegador bloqueia microfone, câmera e tela.
 3. Abra o Papo e clique em **Hospedar agora**. Anote o endereço que aparece (ex.: `https://nome-do-pc.tailXXXX.ts.net`).
 4. Clique em **Abrir o Papo** e **Registre a sua conta primeiro**. A primeira conta vira a **dona** do servidor.
@@ -11,7 +11,7 @@
 ## Mensagem pronta para mandar ao amigo (Windows)
 
 > Oi! Para usar o Papo:
-> 1. Baixe e instale o arquivo que te mandei (`Papo Setup 0.6.0.exe`). Se o Windows avisar que é desconhecido, clique em **Mais informações** e depois em **Executar assim mesmo**.
+> 1. Baixe e instale o arquivo que te mandei (`Papo Setup 0.6.1.exe`). Se o Windows avisar que é desconhecido, clique em **Mais informações** e depois em **Executar assim mesmo**.
 > 2. Instale o **Tailscale** (tailscale.com/download) e entre com a sua conta (Google, Microsoft, Apple ou GitHub).
 > 3. Abra o link de **compartilhamento** que te mandei e clique para **aceitar**.
 > 4. Abra o Papo, clique em **Entrar**, cole este endereço: `https://NOME-DO-PC.tailXXXX.ts.net` e clique em Entrar.

@@ -45,7 +45,12 @@ $('host-copy').addEventListener('click', async (e) => {
 $('join-form').addEventListener('submit', async (e) => {
   e.preventDefault()
   showError('join-error', '')
+  const btn = $('join-submit')
+  btn.disabled = true
+  btn.textContent = 'Conectando…'
   const r = await window.papo.join($('join-address').value)
+  btn.disabled = false
+  btn.textContent = 'Entrar'
   if (!r.ok) showError('join-error', r.error)
 })
 
@@ -67,15 +72,27 @@ function renderFriends(list) {
     addr.className = 'addr'
     addr.textContent = f.url
     info.append(name, addr)
+    if (f.online === false && f.reason) {
+      const why = document.createElement('span')
+      why.className = 'why'
+      why.textContent = f.reason
+      info.append(why)
+    }
     const state = document.createElement('span')
     state.className = 'state' + (f.online ? ' on' : '')
     state.textContent = f.online === null ? 'verificando…' : f.online ? 'no ar' : 'fora do ar'
+    if (f.online === false && f.reason) state.title = f.reason
     const enter = document.createElement('button')
     enter.className = 'primary'
     enter.textContent = 'Entrar'
     enter.addEventListener('click', async () => {
+      showError('friend-error', '')
+      enter.disabled = true
+      enter.textContent = 'Conectando…'
       const r = await window.papo.join(f.url)
-      if (!r.ok) showError('friend-error', r.error)
+      enter.disabled = false
+      enter.textContent = 'Entrar'
+      if (!r.ok) showError('friend-error', `${f.name}: ${r.error}`)
     })
     const remove = document.createElement('button')
     remove.className = 'ghost'
@@ -110,4 +127,5 @@ window.papo.state().then((s) => {
   $('join-address').value = s.lastJoin || ''
   renderHost(s.hosting)
   renderFriends(s.friends || [])
+  if (s.loadError) showError('load-error', `Não consegui abrir ${s.loadError.url}. ${s.loadError.message}`)
 })
