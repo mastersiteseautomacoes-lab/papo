@@ -20,4 +20,4 @@ Também na raiz: [CHANGELOG.md](../CHANGELOG.md) (histórico de versões) e [CLA
 
 ## Imagens
 
-`assets/` guarda a logo usada no README. Capturas de tela do app ainda não foram adicionadas.
+`assets/` guarda a logo e a captura de tela do README (`papo-sala-de-voz.png`: sala de voz com tela compartilhada). Faltam capturas da tela inicial e do chat.

@@ -14,6 +14,14 @@
 
 ---
 
+## Como ele é
+
+<p align="center">
+  <img src="docs/assets/papo-sala-de-voz.png" alt="Papo com uma sala de voz aberta e uma tela compartilhada: servidores à esquerda, canais de texto e de voz, a transmissão no centro e a lista de membros online e offline à direita" width="860" />
+</p>
+
+*Sala de voz com tela compartilhada: servidores, canais de texto e de voz, a transmissão no centro e os membros à direita.*
+
 ## O que é
 
 O Papo é um **servidor de chat pessoal** com a cara do Discord. Um amigo com Windows "hospeda" no próprio computador, os outros entram pelo app ou pelo navegador, e só quem recebe o convite consegue acessar. Não usa a API nem os servidores do Discord: é um sistema próprio, e o nome, a logo e as fontes não são do Discord.
