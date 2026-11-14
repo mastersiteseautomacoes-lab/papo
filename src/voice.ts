@@ -226,7 +226,10 @@ export function useVoice({ send, onError }: Options) {
     if (!lp) return
     try {
       await lp.setScreenShareEnabled(!lp.isScreenShareEnabled, {
-        audio: true,
+        // restrictOwnAudio tira do áudio da tela tudo o que o próprio Papo toca (a voz dos amigos);
+        // sem isso, o amigo se ouvia de volta na transmissão. Os filtros de voz ficam desligados
+        // porque estragam música e vídeo.
+        audio: { restrictOwnAudio: true, echoCancellation: false, noiseSuppression: false, autoGainControl: false },
         contentHint: 'detail',
         resolution: { width: 1920, height: 1080, frameRate: 30 },
       })

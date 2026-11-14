@@ -71,7 +71,7 @@ Está no `.gitignore` e é gerado ou baixado à parte:
 | `public/` | Logos e `worklets/` (portão de ruído, seletor de canal, gravador) |
 | `assets/` | Ícones do app (`icon.png`, `icon.ico`) |
 | `vendor/livekit-server.exe` | Servidor de voz (LiveKit 1.13.10). Não vai para o git |
-| `release/` | Instalador gerado: `Papo Setup 0.6.1.exe` |
+| `release/` | Instalador gerado: `Papo Setup 0.6.2.exe` |
 | `data/` | Banco do modo de desenvolvimento (não é o do app instalado) |
 
 ### No PC de quem instalou o app

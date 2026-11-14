@@ -1,10 +1,10 @@
 # Estado atual e roadmap
 
-**Testado:** texto em tempo real, convites, presença, renomear e excluir, voz e vídeo entre dois apps na mesma máquina, compartilhamento de tela (como faixa de vídeo), bandeja, instalador, layout em janelas pequenas, seleção de canal do microfone. Acesso de um Mac pelo navegador ao servidor hospedado no PC, pelo Tailscale (funcionou depois de abrir o Tailscale no Mac).
+**Testado:** texto em tempo real, convites, presença, renomear e excluir, voz e vídeo entre dois apps na mesma máquina, compartilhamento de tela (como faixa de vídeo), bandeja, instalador, layout em janelas pequenas, seleção de canal do microfone. Acesso de um Mac pelo navegador ao servidor hospedado no PC, pelo Tailscale (funcionou depois de abrir o Tailscale no Mac). Chamada de voz e compartilhamento de tela **entre dois PCs diferentes pelo Tailscale** (funcionaram; o eco do áudio da tela foi corrigido na 0.6.2).
 
 **Ainda não confirmado em uso real:**
-- A **lista de Amigos** e a **seta Início** (0.6.0 e 0.6.1): o primeiro teste entre dois PCs mostrou "fora do ar" sem motivo e tela preta ao entrar; a 0.6.1 corrige isso e mostra o motivo. O teste entre dois computadores de verdade, com o anfitrião em Hospedar, ainda precisa ser repetido com a 0.6.1 (e a notificação de "voltou ao ar" confirmada).
-- Voz, vídeo e tela **entre PCs diferentes pela rede do Tailscale** (a mídia usa o IP do Tailscale e as portas 7881/7882).
+- O fim do eco ao compartilhar a tela (0.6.2): foi medido num teste com o Electron, mas ainda falta repetir numa chamada de verdade.
+- A **lista de Amigos** e a **seta Início** (0.6.0 e 0.6.1): o primeiro teste entre dois PCs mostrou "fora do ar" sem motivo e tela preta ao entrar; a 0.6.1 corrige isso e mostra o motivo. O teste entre dois computadores de verdade, com o anfitrião em Hospedar, ainda precisa ser repetido com a versão mais recente (e a notificação de "voltou ao ar" confirmada).
 - Câmera real e captura de tela real (o menu de escolha de tela/janela no app desktop).
 - Calibração do áudio com a sua voz real depois da correção do canal.
 

@@ -15,6 +15,19 @@ npm run dist:win         # gera release\Papo Setup X.Y.Z.exe
 
 O instalador **não é assinado digitalmente**: o Windows mostra um aviso (SmartScreen). Clique em **Mais informações**, **Executar assim mesmo**.
 
+## Publicar o instalador (Google Drive)
+
+O instalador não vai para o Git (120 MB, e `release/` está no `.gitignore`). Quem chega ao repositório baixa pelo link do README, que aponta para um arquivo no Google Drive:
+
+https://drive.google.com/file/d/14uMZQNLMUCT5LvVCjzy4Lr2iVAL-xOqV/view
+
+Ao lançar uma versão nova:
+
+1. Gere o instalador (`npm run dist:win`).
+2. No Drive, clique com o botão direito no arquivo → **Gerenciar versões** → **Enviar nova versão** e escolha o novo `.exe`. Assim o link continua o mesmo. (Se criar um arquivo novo, troque o link no `README.md` e em [instalacao.md](instalacao.md).)
+3. Confira que o acesso segue como "Qualquer pessoa com o link" e que o nome do arquivo no Drive mostra a versão certa.
+4. Atualize o número de versão nos documentos (README, [instalacao.md](instalacao.md) e [CHANGELOG](../CHANGELOG.md)).
+
 ## Tamanhos
 
 | O que | Tamanho |

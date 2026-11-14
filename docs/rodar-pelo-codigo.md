@@ -43,7 +43,7 @@ Não use `tailscale funnel`: ele publica na internet aberta e não é necessári
 
 ## App instalável (Windows)
 
-`npm run dist:win` gera `release/Papo Setup 0.6.1.exe` (o número vem de `version` no `package.json`). Mande esse arquivo para os amigos.
+`npm run dist:win` gera `release/Papo Setup 0.6.2.exe` (o número vem de `version` no `package.json`). Mande esse arquivo para os amigos.
 O instalador não é assinado digitalmente, então o Windows mostra um aviso do SmartScreen: clique em "Mais informações" e depois em "Executar assim mesmo".
 
 Ao abrir o app há duas opções:

@@ -45,4 +45,5 @@ Mapa completo: [docs/estrutura.md](docs/estrutura.md). Como foi construído: [do
 - **Não vão para o Git:** `node_modules/`, `dist/`, `build/`, `release/`, `vendor/` (o `livekit-server.exe`) e `data/` (o banco).
 - **Documentação junto com a mudança:** ao mudar comportamento, atualize o `docs/` correspondente e o [CHANGELOG](CHANGELOG.md) na mesma alteração.
 - **Versão:** o número vem de `version` no `package.json`; ao subir, atualize o CHANGELOG, o README e os nomes `Papo Setup X.Y.Z.exe` nos documentos.
+- **Instalador:** o `.exe` é distribuído por um link do Google Drive (no README e em `docs/instalacao.md`), não pelo Git. Ao lançar versão nova, envie o novo `.exe` como nova versão do mesmo arquivo no Drive; veja [docs/desenvolvimento.md](docs/desenvolvimento.md).
 - **Limite conhecido:** `node:sqlite` ainda é experimental no Node.

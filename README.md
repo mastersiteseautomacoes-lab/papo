@@ -6,9 +6,9 @@
 
 **Chat de texto, voz, vídeo e compartilhamento de tela no estilo do Discord, feito para você e seus amigos. Roda no seu computador, é privado e gratuito.**
 
-[Instalação](docs/instalacao.md) · [Como usar](docs/uso.md) · [Estrutura](docs/estrutura.md) · [Arquitetura](docs/arquitetura.md) · [Roadmap](docs/roadmap.md)
+**[⬇ Baixar o Papo (Windows)](https://drive.google.com/file/d/14uMZQNLMUCT5LvVCjzy4Lr2iVAL-xOqV/view)** · [Instalação](docs/instalacao.md) · [Como usar](docs/uso.md) · [Estrutura](docs/estrutura.md) · [Arquitetura](docs/arquitetura.md) · [Roadmap](docs/roadmap.md)
 
-![versão](https://img.shields.io/badge/vers%C3%A3o-0.6.1-5865f2) ![plataforma](https://img.shields.io/badge/hospeda%20em-Windows-0078d4) ![acesso](https://img.shields.io/badge/acesso-privado%20(Tailscale)-2ea44f) ![linguagem](https://img.shields.io/badge/TypeScript-3178c6)
+![versão](https://img.shields.io/badge/vers%C3%A3o-0.6.2-5865f2) ![plataforma](https://img.shields.io/badge/hospeda%20em-Windows-0078d4) ![acesso](https://img.shields.io/badge/acesso-privado%20(Tailscale)-2ea44f) ![linguagem](https://img.shields.io/badge/TypeScript-3178c6)
 
 </div>
 
@@ -47,7 +47,7 @@ Quem hospeda roda o servidor no próprio PC. Quem entra só precisa do endereço
 
 **Usar o app (Windows)**
 
-1. Instale o **Papo** (`Papo Setup 0.6.1.exe`) e o **Tailscale**.
+1. [Baixe o instalador](https://drive.google.com/file/d/14uMZQNLMUCT5LvVCjzy4Lr2iVAL-xOqV/view) (`Papo Setup 0.6.2.exe`, ~120 MB, no Google Drive), instale o **Papo** e o **Tailscale**. Como o instalador não é assinado, o Windows pode avisar: clique em **Mais informações** e depois em **Executar assim mesmo**.
 2. No painel do Tailscale, ative **HTTPS Certificates** (aba DNS).
 3. Abra o Papo e escolha **Hospedar** (para ligar o seu servidor) ou **Entrar** (para usar o de um amigo).
 
@@ -105,7 +105,7 @@ O mapa completo, com o que fica de fora do Git: [docs/estrutura.md](docs/estrutu
 
 ## Estado do projeto
 
-Versão **0.6.1**, em uso entre amigos. Texto, convites, presença, gestão de canais, voz e vídeo (na mesma máquina), tela e o app instalável já foram testados. Ainda falta confirmar em uso real a voz entre computadores diferentes e a lista de Amigos. O detalhe está no [roadmap](docs/roadmap.md).
+Versão **0.6.2**, em uso entre amigos. Texto, convites, presença, gestão de canais, voz e vídeo (na mesma máquina), tela e o app instalável já foram testados. Ainda falta confirmar em uso real a voz entre computadores diferentes e a lista de Amigos. O detalhe está no [roadmap](docs/roadmap.md).
 
 ## Licença
 

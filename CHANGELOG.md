@@ -2,6 +2,12 @@
 
 Todas as mudanças importantes do Papo. A versão vem de `version` no `package.json`.
 
+## 0.6.2 (2026-10-24)
+
+### Corrigido
+- **Eco ao compartilhar a tela:** o áudio da transmissão incluía tudo o que o computador tocava, inclusive a voz dos amigos na chamada, que voltava para eles com atraso. Agora o áudio da tela exclui o que o próprio Papo toca (`restrictOwnAudio`) e continua levando o som de outros programas, como um vídeo ou uma música. Medido no Electron 44: sem a opção o tom tocado pelo app entrou na captura, com a opção não entrou.
+- O áudio da tela não passa mais por cancelamento de eco, supressão de ruído nem ganho automático, que pioravam música e vídeo.
+
 ## 0.6.1 (2026-10-24)
 
 Correção encontrada no primeiro teste entre dois computadores: um amigo salvou o servidor de outro, a lista mostrou "fora do ar" sem explicar e, ao clicar em Entrar, a janela ficou preta.

@@ -1,7 +1,7 @@
 # Papo: a stack (como o app foi construído)
 
 Este documento explica **com quê** o Papo foi feito, **como cada parte funciona** e **por que** escolhemos cada ferramenta. Foi escrito para quem não é programador, mas tem os detalhes técnicos para quem quiser continuar o projeto.
-Complementa a [visão geral](visao-geral.md) (o que fizemos) e a [instalação](instalacao.md) (como instalar e usar). Versão do app: **0.6.1**.
+Complementa a [visão geral](visao-geral.md) (o que fizemos) e a [instalação](instalacao.md) (como instalar e usar). Versão do app: **0.6.2**.
 
 ---
 
