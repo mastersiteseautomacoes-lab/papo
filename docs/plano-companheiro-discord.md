@@ -79,7 +79,7 @@ Cada fase termina com algo que dá para testar e mostrar.
 - Portas de mídia do LiveKit: TCP 7881 e UDP 7882.
 - **Pronto quando:** dois PCs em casas diferentes, **sem Tailscale**, abrem o app, entram numa sala e um vê a tela do outro, sem derrubar o n8n.
 
-### Fase 2: sessões por link (sem Discord) — implementada e testada localmente; falta validar na VPS
+### Fase 2: sessões por link (sem Discord) — implementada, testada localmente e publicada na VPS; falta o teste com tela real entre dois computadores
 - Criar uma sessão, compartilhar a tela e gerar um link e um código de 12 caracteres, como o "Criar sessão" da Telinha.
 - Entrar por link ou código, com um nome (convidado), pelo app ou pelo navegador, inclusive no celular.
 - **Pronto quando:** uma pessoa cria a sessão no app, outra abre o link no celular e assiste.
