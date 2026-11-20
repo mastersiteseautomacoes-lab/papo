@@ -26,7 +26,7 @@ Teste sem mexer no Tailscale: `PAPO_SKIP_TAILSCALE=1`. Dois anfitriões na mesma
 
 | Caminho | O que é |
 |---|---|
-| `src/` | Interface React. `App.tsx` (tela principal), `Login.tsx`, `VoiceRoom.tsx`, `voice.ts`, `api.ts`, `audio/`, `styles/` |
+| `src/` | Interface React. `Home.tsx` (início: código de 12 letras, criar sessão), `Session.tsx` (sessão em `/j/<código>`), `VoiceRoom.tsx` (sala), `Login.tsx`, `voice.ts`, `api.ts`, `audio/`, `styles/`. O chat saiu desta branch (está na tag `chat-completo-v0.6.2`) |
 | `server/` | `index.ts` (rotas, WebSocket, proxy `/lk`), `db.ts` (SQLite), `auth.ts` (scrypt, sessões, limites) |
 | `electron/` | `main.cjs` (janela, bandeja, servidor, LiveKit, Tailscale, amigos), `preload.cjs`, `launcher.*` |
 | `public/worklets/` | AudioWorklets em JavaScript puro (portão, seletor de canal, gravador) |

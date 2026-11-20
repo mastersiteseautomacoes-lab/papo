@@ -5,7 +5,7 @@ import { api, setToken } from './api'
 // Só existe dentro do app instalado (Electron); no navegador a seta não aparece.
 const goHome = (window as unknown as { papo?: { home?: () => Promise<boolean> } }).papo?.home
 
-export default function Login({ onDone }: { onDone: () => void }) {
+export default function Login({ onDone, onBack }: { onDone: () => void; onBack?: () => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -32,7 +32,11 @@ export default function Login({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="auth-screen">
-      {goHome && (
+      {onBack ? (
+        <button type="button" className="auth-back" onClick={onBack} title="Voltar">
+          <ArrowLeft size={18} /> Voltar
+        </button>
+      ) : goHome && (
         <button type="button" className="auth-back" onClick={() => goHome()} title="Voltar ao início (Hospedar / Entrar)">
           <ArrowLeft size={18} /> Início
         </button>

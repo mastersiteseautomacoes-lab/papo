@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { ArrowLeft, Check, Copy, Link2, LogOut } from 'lucide-react'
-import { api, getToken, type SessionInfo } from './api'
+import { ArrowLeft, Check, Link2, LogOut, Settings } from 'lucide-react'
+import { api, type SessionInfo } from './api'
 import { useVoice } from './voice'
+import AudioSettings from './AudioSettings'
 import VoiceRoom from './VoiceRoom'
 import VolumeMenu, { type VolumeTarget } from './VolumeMenu'
 
@@ -24,7 +25,7 @@ export function extractCode(text: string): string | null {
 }
 
 /** Copia para a área de transferência (a API moderna só existe em páginas seguras). */
-async function copyText(text: string): Promise<boolean> {
+export async function copyText(text: string): Promise<boolean> {
   try { await navigator.clipboard.writeText(text); return true } catch { /* tenta o método antigo */ }
   const el = document.createElement('textarea')
   el.value = text
@@ -47,6 +48,7 @@ export function SessionPage({ code: rawCode }: { code: string }) {
   const [toast, setToast] = useState('')
   const [copied, setCopied] = useState(false)
   const [volMenu, setVolMenu] = useState<VolumeTarget | null>(null)
+  const [audioOpen, setAudioOpen] = useState(false)
   const flash = useCallback((m: string) => { setToast(m); window.setTimeout(() => setToast(''), 6000) }, [])
   const voice = useVoice({ onError: flash, micOnJoin: false })
 
@@ -100,7 +102,7 @@ export function SessionPage({ code: rawCode }: { code: string }) {
           <img src="/logo.png" alt="" width={72} height={72} className="auth-logo" />
           <h1>{error}</h1>
           <p className="muted">Confira o código ou peça um link novo a quem criou a sessão.</p>
-          <a className="primary session-link-btn" href="/s">Entrar com outro código</a>
+          <a className="primary session-link-btn" href="/">Entrar com outro código</a>
         </div>
       </div>
     )
@@ -126,7 +128,7 @@ export function SessionPage({ code: rawCode }: { code: string }) {
           <button className="primary" disabled={voice.status === 'connecting' || !myName}>
             {voice.status === 'connecting' ? 'Conectando…' : 'Entrar'}
           </button>
-          <a className="link" href="/s">Usar outro código</a>
+          <a className="link" href="/">Usar outro código</a>
         </form>
       </div>
     )
@@ -136,13 +138,18 @@ export function SessionPage({ code: rawCode }: { code: string }) {
   return (
     <div className="session-page" onClick={() => setVolMenu(null)}>
       <header className="session-bar">
-        <Link2 size={18} className="muted" />
-        <span className="session-code" title="Código da sessão">{prettyCode(code)}</span>
-        <button className="session-btn" onClick={copyLink} title="Copiar o link da sessão">
-          {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copiado' : 'Copiar link'}
-        </button>
+        <a className="session-back" href="/" title="Voltar ao início (você sai da sessão)"><ArrowLeft size={18} /></a>
+        <img src="/logo.png" alt="" width={28} height={28} className="session-logo" />
+        <div className="session-title">
+          <strong className="session-code" title="Código da sessão">{prettyCode(code)}</strong>
+          <small className="muted">Sessão por link</small>
+        </div>
         <span className="spacer" />
-        <small className="muted">{people} {people === 1 ? 'pessoa' : 'pessoas'}</small>
+        <small className="muted session-people">{people} {people === 1 ? 'pessoa' : 'pessoas'}</small>
+        <button className="session-btn" onClick={copyLink} title="Copia o link para mandar a quem você quer convidar">
+          {copied ? <Check size={16} /> : <Link2 size={16} />} {copied ? 'Link copiado' : 'Convidar'}
+        </button>
+        <button className="session-btn" onClick={() => setAudioOpen(true)} title="Áudio e microfone"><Settings size={16} /> Áudio</button>
         {info.isCreator && <button className="session-btn danger" onClick={end} title="Encerra a sessão para todos"><LogOut size={16} /> Encerrar</button>}
       </header>
       <VoiceRoom
@@ -159,53 +166,8 @@ export function SessionPage({ code: rawCode }: { code: string }) {
           onClose={() => setVolMenu(null)}
         />
       )}
+      {audioOpen && <AudioSettings onClose={() => setAudioOpen(false)} />}
       {toast && <div className="toast">{toast}</div>}
-    </div>
-  )
-}
-
-/** Página /s: criar uma sessão (precisa de conta) ou entrar com um código ou link. */
-export function SessionHub() {
-  const authed = !!getToken()
-  const [text, setText] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-
-  function join(e: FormEvent) {
-    e.preventDefault()
-    const code = extractCode(text)
-    if (!code) return setError('Código inválido: são 12 letras e números, como abcd-efgh-jkmn. Pode colar o link inteiro.')
-    location.assign(`/j/${code}`)
-  }
-
-  async function create() {
-    setBusy(true); setError('')
-    try {
-      const { code } = await api.createSession()
-      location.assign(`/j/${code}`)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Não consegui criar a sessão.')
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="auth-screen">
-      <div className="auth-card">
-        <a className="auth-back" href="/"><ArrowLeft size={18} /> Início</a>
-        <img src="/logo.png" alt="" width={72} height={72} className="auth-logo" />
-        <h1>Sessões por link</h1>
-        <p className="muted">Compartilhe a tela com quem tem o link, sem precisar de conta.</p>
-        <button className="primary" onClick={create} disabled={busy || !authed}>{busy ? 'Criando…' : 'Criar sessão'}</button>
-        {!authed && <p className="muted">Para criar uma sessão, <a className="link" href="/">entre na sua conta</a>. Para entrar numa, não precisa.</p>}
-        <form onSubmit={join} className="session-join">
-          <label>Entrar com código ou link
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="abcd-efgh-jkmn" autoComplete="off" spellCheck={false} />
-          </label>
-          <button className="primary" disabled={!text.trim()}>Entrar</button>
-        </form>
-        {error && <div className="form-error" role="alert">{error}</div>}
-      </div>
     </div>
   )
 }

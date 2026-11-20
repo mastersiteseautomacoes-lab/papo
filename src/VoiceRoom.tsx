@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
-import { Track, type Participant } from 'livekit-client'
-import { Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, PhoneOff, Headphones, HeadphoneOff, Maximize, Minimize, ZoomIn, ZoomOut, Volume2, VolumeX } from 'lucide-react'
+import { useEffect, useLayoutEffect, useReducer, useRef, useState, type CSSProperties } from 'react'
+import { Track, type Participant, type Room } from 'livekit-client'
+import { Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, PhoneOff, Headphones, HeadphoneOff, Maximize, Minimize, ZoomIn, ZoomOut, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react'
 import type { Member } from './api'
 import { MAX_VOLUME, type AudioSource, type VoiceState, type VolumeSetting } from './voice'
 import type { VolumeTarget } from './VolumeMenu'
@@ -113,7 +113,30 @@ function bestGrid(n: number, W: number, H: number) {
   return { w, h: Math.floor(w / RATIO) }
 }
 
-function Stage({ voice, memberById, onVolumeMenu }: { voice: VoiceState; memberById: Props['memberById']; onVolumeMenu: Props['onVolumeMenu'] }) {
+/** "1920×1080 · 30 fps" da sua própria transmissão de tela (vazio se não estiver transmitindo). */
+function screenStats(room: Room): string {
+  const s = room.localParticipant.getTrackPublication(Track.Source.ScreenShare)?.track?.mediaStreamTrack.getSettings()
+  if (!s?.width || !s.height) return ''
+  return `${s.width}×${s.height}${s.frameRate ? ` · ${Math.round(s.frameRate)} fps` : ''}`
+}
+
+/** No lugar da sua própria tela: avisa que está no ar sem mostrar a tela dentro dela mesma (o "espelho infinito"). */
+function SelfLive({ stats, onPreview }: { stats: string; onPreview: () => void }) {
+  return (
+    <div className="self-live">
+      <span className="self-live-icon"><MonitorUp size={28} /></span>
+      <h2>Sua tela está no ar</h2>
+      {stats && <p className="self-live-stats">{stats}</p>}
+      <p>Você também pode assistir às transmissões das outras pessoas aqui.</p>
+      <button className="session-btn" onClick={onPreview}><Eye size={16} /> Ver minha tela</button>
+    </div>
+  )
+}
+
+function Stage({ voice, memberById, onVolumeMenu, previewSelf, onPreviewSelf }: {
+  voice: VoiceState; memberById: Props['memberById']; onVolumeMenu: Props['onVolumeMenu']
+  previewSelf: boolean; onPreviewSelf: () => void
+}) {
   const room = voice.room!
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 0, h: 0 })
@@ -144,29 +167,36 @@ function Stage({ voice, memberById, onVolumeMenu }: { voice: VoiceState; memberB
   const [focusKey, setFocusKey] = useState<string | null>(null)
 
   type Item = { key: string; p: Participant; source: Track.Source }
+  const selfSharing = !!room.localParticipant.getTrackPublication(Track.Source.ScreenShare)?.track
+  // a sua própria tela só aparece se você pedir ("Ver minha tela"); senão vira o aviso "Sua tela está no ar"
   const screens: Item[] = participants
-    .filter((p) => p.getTrackPublication(Track.Source.ScreenShare)?.track)
+    .filter((p) => p.getTrackPublication(Track.Source.ScreenShare)?.track && (!p.isLocal || previewSelf))
     .map((p) => ({ key: `${p.identity}:screen`, p, source: Track.Source.ScreenShare }))
   const cams: Item[] = participants.map((p) => ({ key: `${p.identity}:cam`, p, source: Track.Source.Camera }))
   const all = [...screens, ...cams]
   // o bloco ampliado (ou a primeira tela compartilhada) vira o principal; o resto vai para a faixa
   const main = all.find((x) => x.key === focusKey) ?? screens[0]
-  const hasMain = !!main
+  const showSelfLive = !main && selfSharing
+  const hasMain = !!main || showSelfLive
 
   let content = null
   if (box.w > 0 && box.h > 0) {
-    if (main) {
+    if (main || showSelfLive) {
       const stripH = Math.max(64, Math.min(140, Math.floor(box.h * 0.22)))
       const tileStyle: CSSProperties = { width: Math.floor(stripH * RATIO), height: stripH, flex: 'none' }
       content = (
         <div className="stage">
           <div className="stage-main">
-            <Tile p={main.p} source={main.source} member={member(main.p)} style={{ width: '100%', height: '100%' }}
-              focused={focusKey === main.key} onToggleFocus={() => setFocusKey(focusKey === main.key ? null : main.key)}
-              {...volProps(main.p, main.source)} />
+            {main ? (
+              <Tile p={main.p} source={main.source} member={member(main.p)} style={{ width: '100%', height: '100%' }}
+                focused={focusKey === main.key} onToggleFocus={() => setFocusKey(focusKey === main.key ? null : main.key)}
+                {...volProps(main.p, main.source)} />
+            ) : (
+              <SelfLive stats={screenStats(room)} onPreview={onPreviewSelf} />
+            )}
           </div>
           <div className="strip" style={{ height: stripH }}>
-            {all.filter((x) => x.key !== main.key).map((x) => (
+            {all.filter((x) => !main || x.key !== main.key).map((x) => (
               <Tile key={x.key} p={x.p} source={x.source} member={member(x.p)} style={tileStyle}
                 onToggleFocus={() => setFocusKey(x.key)} {...volProps(x.p, x.source)} />
             ))}
@@ -186,26 +216,52 @@ function Stage({ voice, memberById, onVolumeMenu }: { voice: VoiceState; memberB
 }
 
 export default function VoiceRoom({ voice, channelName, memberById, onVolumeMenu }: Props) {
+  const [previewSelf, setPreviewSelf] = useState(false)
+  const [, tick] = useReducer((n: number) => n + 1, 0)
+  // enquanto transmite, atualiza de vez em quando a resolução e os quadros por segundo mostrados
+  useEffect(() => {
+    if (!voice.sharing) { setPreviewSelf(false); return }
+    const id = window.setInterval(tick, 2000)
+    return () => window.clearInterval(id)
+  }, [voice.sharing])
+
   if (voice.status === 'connecting' || !voice.room) {
     return <div className="voice-room"><div className="voice-wait">Conectando à sala <strong>{channelName}</strong>…</div></div>
   }
+  const stats = voice.sharing ? screenStats(voice.room) : ''
+  // celulares e tablets não conseguem compartilhar a tela: lá a pessoa só assiste (e pode usar câmera e microfone)
+  const canShare = typeof navigator.mediaDevices?.getDisplayMedia === 'function'
   return (
     <div className="voice-room">
-      <Stage voice={voice} memberById={memberById} onVolumeMenu={onVolumeMenu} />
+      <Stage voice={voice} memberById={memberById} onVolumeMenu={onVolumeMenu} previewSelf={previewSelf} onPreviewSelf={() => setPreviewSelf(true)} />
       <div className="voice-controls">
-        <button className={`vc ${voice.micOn ? '' : 'off'}`} onClick={voice.toggleMic} title={voice.micOn ? 'Silenciar microfone' : 'Ligar microfone'}>
-          {voice.micOn ? <Mic size={22} /> : <MicOff size={22} />}
-        </button>
-        <button className={`vc ${voice.deafened ? 'off' : ''}`} onClick={voice.toggleDeafen} title={voice.deafened ? 'Voltar a ouvir' : 'Ensurdecer'}>
-          {voice.deafened ? <HeadphoneOff size={22} /> : <Headphones size={22} />}
-        </button>
-        <button className={`vc ${voice.camOn ? 'on' : ''}`} onClick={voice.toggleCamera} title={voice.camOn ? 'Desligar câmera' : 'Ligar câmera'}>
-          {voice.camOn ? <Video size={22} /> : <VideoOff size={22} />}
-        </button>
-        <button className={`vc ${voice.sharing ? 'on' : ''}`} onClick={voice.toggleScreen} title={voice.sharing ? 'Parar de compartilhar' : 'Compartilhar tela'}>
-          {voice.sharing ? <MonitorOff size={22} /> : <MonitorUp size={22} />}
-        </button>
-        <button className="vc hangup" onClick={voice.leave} title="Sair da sala"><PhoneOff size={22} /></button>
+        <div className="vc-status">
+          {voice.sharing && <><span className="live-badge">NO AR</span>{stats && <small>{stats}</small>}</>}
+        </div>
+        <div className="vc-main">
+          <button className={`vc ${voice.micOn ? '' : 'off'}`} onClick={voice.toggleMic} title={voice.micOn ? 'Silenciar microfone' : 'Ligar microfone'}>
+            {voice.micOn ? <Mic size={22} /> : <MicOff size={22} />}
+          </button>
+          <button className={`vc ${voice.deafened ? 'off' : ''}`} onClick={voice.toggleDeafen} title={voice.deafened ? 'Voltar a ouvir' : 'Ensurdecer'}>
+            {voice.deafened ? <HeadphoneOff size={22} /> : <Headphones size={22} />}
+          </button>
+          <button className={`vc ${voice.camOn ? 'on' : ''}`} onClick={voice.toggleCamera} title={voice.camOn ? 'Desligar câmera' : 'Ligar câmera'}>
+            {voice.camOn ? <Video size={22} /> : <VideoOff size={22} />}
+          </button>
+          {voice.sharing ? (
+            <button className="vc-pill stop" onClick={voice.toggleScreen} title="Parar de compartilhar a tela"><MonitorOff size={20} /> Parar tela</button>
+          ) : canShare && (
+            <button className="vc-pill" onClick={voice.toggleScreen} title="Compartilhar a tela"><MonitorUp size={20} /> Compartilhar tela</button>
+          )}
+          <button className="vc hangup" onClick={voice.leave} title="Sair da sessão"><PhoneOff size={22} /></button>
+        </div>
+        <div className="vc-side">
+          {voice.sharing && (
+            <button className="session-btn" onClick={() => setPreviewSelf((v) => !v)} title="Mostra a sua tela transmitida aqui dentro">
+              {previewSelf ? <EyeOff size={16} /> : <Eye size={16} />} {previewSelf ? 'Esconder minha tela' : 'Ver minha tela'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

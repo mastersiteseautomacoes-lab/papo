@@ -16,6 +16,8 @@
 
 ## Como ele é
 
+> **Em reformulação (branch `companheiro-discord`):** o chat de texto saiu e o Papo passa a ser só de **sessões** (tela, câmera e áudio, entrando com um código de 12 letras). A captura abaixo mostra a versão com chat, congelada na tag `chat-completo-v0.6.2`; ela será refeita quando a nova interface estiver fechada. Veja o [plano](docs/plano-companheiro-discord.md).
+
 <p align="center">
   <img src="docs/assets/papo-sala-de-voz.png" alt="Papo com uma sala de voz aberta e uma tela compartilhada: servidores à esquerda, canais de texto e de voz, a transmissão no centro e a lista de membros online e offline à direita" width="860" />
 </p>

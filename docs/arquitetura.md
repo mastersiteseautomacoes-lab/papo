@@ -62,7 +62,7 @@ Imagine o Papo como um restaurante:
 
 ## 3. A interface (front-end)
 
-**React** divide a tela em **componentes**, como peças de Lego: `App` (a tela principal), `Login`, `VoiceRoom` (sala de voz), `AudioSettings` (configurações de áudio), `VolumeMenu` (volume), e assim por diante. Cada peça mostra dados e reage a cliques.
+**React** divide a tela em **componentes**, como peças de Lego: `App` (escolhe a tela), `Home` (início, com o código de 12 letras), `Session` (a sessão por link), `Login`, `VoiceRoom` (a sala), `AudioSettings` (configurações de áudio), `VolumeMenu` (volume), e assim por diante. Cada peça mostra dados e reage a cliques.
 
 - **Estado:** os dados da tela (lista de servidores, mensagens, quem está na sala) ficam em variáveis de estado do React. Quando o servidor manda uma novidade, o estado muda e a tela se redesenha sozinha.
 - **Ícones:** biblioteca lucide (traço linear, parecido com o estilo do Discord).
@@ -73,7 +73,7 @@ Imagine o Papo como um restaurante:
 
 | Arquivo | O que faz |
 |---|---|
-| `src/App.tsx` | Tela principal: trilho de servidores, canais, chat, membros, menus, diálogos |
+| `src/App.tsx`, `src/Home.tsx`, `src/Session.tsx` | As duas telas desta versão: início (código de 12 letras, criar sessão) e sessão por link. O chat com servidores, canais e membros (antes em `App.tsx`) está na tag `chat-completo-v0.6.2` |
 | `src/api.ts` | Fala com o servidor (pedidos HTTP) e mantém o WebSocket com reconexão automática |
 | `src/voice.ts` | Entrar na sala de voz, microfone, câmera, tela, volumes (usa LiveKit) |
 | `src/VoiceRoom.tsx` | Os blocos de vídeo, ampliar, tela cheia, barrinha de volume |
@@ -110,7 +110,7 @@ A escolha fica salva no navegador/app e é aplicada logo ao abrir (por isso não
 
 - **Escala de espaço** (4, 8, 12, 16, 24, 32 px), **escala de raios** (4, 8, 12, 16 px) e **sombras** (`low`, `high`, `ledge`), como no Discord.
 - **Estados:** hover, seleção, ativo e desabilitado usam as mesmas variáveis (`--background-hover`, `--background-active`), então ficam consistentes.
-- **Layout:** CSS Grid divide a tela em 3 grandes colunas (servidores, canais, chat); o chat tem mais duas: mensagens e membros. A sala de voz calcula o maior tamanho 16:9 que cabe, por isso encolhe junto com a janela.
+- **Layout:** a sessão é uma coluna: cabeçalho, palco e barra de controles. O palco mostra a tela compartilhada **inteira**, em qualquer tamanho de janela, e a faixa de pessoas embaixo. O vídeo preenche o bloco por posicionamento absoluto (`object-fit: contain`), sem influenciar o tamanho dele; assim a altura natural do vídeo não passa do bloco nem é cortada quando a janela fica larga. Na versão com chat havia 3 colunas (servidores, canais, chat) mais membros.
 - **Janelas pequenas:** consultas `@media` escondem a lista de membros e encolhem o painel de canais.
 
 Os valores de cor e medidas foram **estimados a olho** a partir dos screenshots do Discord, e não lidos do código dele. São parecidos, mas não idênticos.

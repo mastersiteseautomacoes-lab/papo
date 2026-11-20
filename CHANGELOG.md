@@ -6,6 +6,15 @@ Todas as mudanças importantes do Papo. A versão vem de `version` no `package.j
 
 A `main` e a tag `chat-completo-v0.6.2` seguem como o chat completo. Esta branch transforma o Papo num companheiro do Discord ([plano](docs/plano-companheiro-discord.md)).
 
+### Remodelação da interface: só sessões
+- **Corrigido: vídeo cortado ao alargar a janela.** O bloco do vídeo era um `grid` de altura automática com o vídeo em `height: 100%`: numa janela larga, a altura natural do vídeo (16:9 na largura toda) passava da do bloco e o excesso era cortado embaixo (a barra de tarefas sumia). O vídeo agora preenche o bloco por posicionamento absoluto e a tela aparece inteira em qualquer tamanho.
+- **Nova tela inicial** (`/`): 12 caixas para o código (digitar, apagar, colar o código ou o link), **Entrar**, **Colar**, **Criar uma sessão** e o menu da conta (nome, código de convite do dono, sair).
+- **Chat removido da interface.** Servidores, canais e mensagens ficam só na tag `chat-completo-v0.6.2` e na `main`. As rotas do servidor continuam (as contas e os convites dependem delas); a limpeza fica para depois.
+- **Sessão no estilo da Telinha (só a organização, sem copiar marca, desenhos nem código):** cabeçalho com código, nº de pessoas, **Convidar**, **Áudio** e **Encerrar**; a **sua tela fica escondida** ("Sua tela está no ar") com **Ver minha tela** (acaba o espelho infinito); selo **NO AR** com resolução e quadros por segundo; botões **Compartilhar tela** / **Parar tela**.
+- **Áudio e microfone** (supressão de ruído, portão, calibração) acessíveis dentro da sessão, pelo botão **Áudio**.
+- **Celular e tablet:** o botão de compartilhar tela não aparece (esses aparelhos só assistem); a faixa de pessoas rola sem esconder o começo; os 12 campos do código cabem na tela.
+- **Testado** com um Chrome sem janela e uma tela falsa 1920×1080 com marcas nos quatro cantos: em 5 tamanhos de janela (1280×720, 1900×600, 1000×900, 800×1000 e 390×844) o vídeo cabe no bloco, usa `contain`, a barra de controles fica visível e a página não rola. Também: digitar e apagar no código, criar sessão, convidado, "Sua tela está no ar", NO AR, "Ver minha tela" e parar a tela. **Ainda falta** testar com um compartilhamento de tela real e na VPS.
+
 ### Fase 2: sessões por link (sem Discord)
 - **Criar e entrar:** uma conta cria a sessão e recebe um link (`/j/abcd-efgh-jkmn`) e um código de 12 caracteres (alfabeto sem i, l, o, 0 e 1). Quem tem o link entra só com um nome, pelo navegador (inclusive no celular) ou colando o link no app de Windows. Página `/s` para criar ou entrar com código; ícone de link na lateral do chat.
 - **Servidor:** tabela `link_sessions` e rotas `POST /api/sessions`, `GET /api/sessions/:código`, `POST /api/sessions/:código/token` e `DELETE /api/sessions/:código`. Sala do LiveKit `s-<código>`. Validade de 12 h, no máximo 3 sessões ativas por conta, nome de convidado de 1 a 24 caracteres, só o criador encerra, e o passe do convidado não dá acesso a nenhuma conta nem ao chat.

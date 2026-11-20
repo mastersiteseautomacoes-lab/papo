@@ -7,9 +7,11 @@ Onde fica cada coisa, como as pastas se conversam e o que **não** está no Git.
 ```
 Papo/
 ├── src/                  Interface (React + TypeScript)
-│   ├── App.tsx             tela principal: servidores, canais, chat, membros
+│   ├── App.tsx             escolhe a tela: início (/) ou sessão (/j/<código>)
+│   ├── Home.tsx            início: 12 caixas do código, criar sessão, menu da conta
+│   ├── Session.tsx         sessão por link: entrar, cabeçalho, convidar, encerrar
 │   ├── Login.tsx           login e registro (com a seta "Início" no app instalado)
-│   ├── VoiceRoom.tsx       sala de voz: blocos de vídeo, ampliar, tela cheia
+│   ├── VoiceRoom.tsx       sala: blocos de vídeo, "Sua tela está no ar", controles, selo NO AR
 │   ├── voice.ts            entrar na sala, microfone, câmera, tela, volumes (LiveKit)
 │   ├── api.ts              pedidos HTTP + WebSocket com reconexão
 │   ├── AudioSettings.tsx   tela de áudio e calibração
@@ -63,7 +65,7 @@ Está no `.gitignore` e é gerado ou baixado à parte:
 
 | Pasta/arquivo | O que é |
 |---|---|
-| `src/` | Interface (React). `App.tsx`, `VoiceRoom.tsx`, `voice.ts`, `AudioSettings.tsx`, `Login.tsx`, `api.ts` |
+| `src/` | Interface (React). `App.tsx`, `Home.tsx`, `Session.tsx`, `VoiceRoom.tsx`, `voice.ts`, `AudioSettings.tsx`, `Login.tsx`, `api.ts` |
 | `src/audio/` | Tratamento de áudio: `pipeline.ts`, `MicProcessor.ts`, `settings.ts`, `calibrate.ts` |
 | `src/styles/` | `tokens.css` (design tokens e temas) e `app.css` |
 | `server/` | Servidor Node: `index.ts`, `db.ts`, `auth.ts` |
