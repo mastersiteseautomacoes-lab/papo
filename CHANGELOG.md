@@ -11,6 +11,9 @@ A `main` e a tag `chat-completo-v0.6.2` seguem como o chat completo. Esta branch
 - **`TRUST_PROXY`:** o servidor lê o IP real de quem chega por trás de um proxy, para o limite de tentativas valer por pessoa.
 - **`PAPO_SETUP_CODE`:** em servidor público, a primeira conta (a dona) só é criada com esse código, para um estranho não chegar antes.
 - Texto da tela de registro ajustado para o código de configuração.
+- **EasyPanel:** `deploy/docker-compose.easypanel.yml` (Papo e LiveKit, sem Caddy, com limites de processador e memória) para VPS que já têm o EasyPanel ocupando as portas 80 e 443. Guia com os dois caminhos em [docs/deploy-vps.md](docs/deploy-vps.md).
+- **Imagem pronta:** workflow `.github/workflows/papo-image.yml` compila a imagem do servidor no GitHub e publica no ghcr.io, para a VPS não precisar compilar.
+- Plano atualizado: sessões por link passam a vir antes do bot; LiveKit na própria VPS.
 
 ## 0.6.2 (2026-10-24)
 

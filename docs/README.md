@@ -15,7 +15,7 @@ Ponto de partida para quem chega ao repositório. Para uma visão rápida, veja 
 | [rodar-pelo-codigo.md](rodar-pelo-codigo.md) | Rodar pelo navegador, sem o app instalado |
 | [seguranca.md](seguranca.md) | O que protege o servidor, privacidade e custos |
 | [roadmap.md](roadmap.md) | O que está testado, o que falta e ideias futuras |
-| [deploy-vps.md](deploy-vps.md) | Colocar o Papo numa VPS com domínio e HTTPS, sem Tailscale (fase 1; ainda não testado numa VPS real) |
+| [deploy-vps.md](deploy-vps.md) | Colocar o Papo numa VPS com HTTPS, sem Tailscale: caminho A (EasyPanel, imagem pronta) e B (VPS limpa, Caddy). Fase 1; ainda não testado numa VPS real |
 | [plano-companheiro-discord.md](plano-companheiro-discord.md) | Rascunho de plano: Papo como companheiro do Discord (bot, servidor central, sem Tailscale) |
 
 Também na raiz: [CHANGELOG.md](../CHANGELOG.md) (histórico de versões) e [CLAUDE.md](../CLAUDE.md) (guia para quem programa, inclusive com o Claude Code).

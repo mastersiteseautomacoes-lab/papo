@@ -1,0 +1,63 @@
+# Papo no EasyPanel (VPS compartilhada com outros serviços): servidor do Papo + LiveKit.
+# NÃO tem Caddy: o EasyPanel (Traefik) já ocupa as portas 80 e 443 e cuida do HTTPS pelo domínio
+# que você liga ao serviço "papo" no painel (porta interna 38080).
+# Passo a passo: docs/deploy-vps.md, "Caminho A: EasyPanel".
+#
+# Variáveis (aba "Ambiente" do serviço no EasyPanel, ou um .env ao lado deste arquivo):
+#   PAPO_SETUP_CODE, LIVEKIT_API_KEY, LIVEKIT_API_SECRET   (obrigatórias)
+#   PAPO_IMAGE_TAG, LIVEKIT_VERSION                        (opcionais)
+name: papo
+
+services:
+  papo:
+    # Imagem pronta, compilada pelo GitHub (.github/workflows/papo-image.yml). A VPS não compila nada.
+    image: ghcr.io/mastersiteseautomacoes-lab/papo-server:${PAPO_IMAGE_TAG:-companheiro-discord}
+    restart: unless-stopped
+    environment:
+      # Confia no IP que o proxy (Traefik) repassa, para o limite de tentativas valer por pessoa.
+      TRUST_PROXY: uniquelocal
+      # Sem este código a primeira conta (a dona) não é criada: evita que um estranho chegue antes de você.
+      PAPO_SETUP_CODE: ${PAPO_SETUP_CODE:?defina PAPO_SETUP_CODE}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?defina LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?defina LIVEKIT_API_SECRET}
+      LIVEKIT_TARGET: http://livekit:7880
+    volumes:
+      - papo_data:/data
+    depends_on:
+      - livekit
+    # Limites para não tirar recursos do n8n e dos outros serviços (a VPS tem 1 núcleo).
+    # Valores iniciais, ainda NÃO medidos: ajuste depois de observar o consumo.
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 300M
+
+  livekit:
+    image: livekit/livekit-server:${LIVEKIT_VERSION:-v1.13.10}
+    restart: unless-stopped
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?}: ${LIVEKIT_API_SECRET:?}"
+      # O LiveKit lê a configuração inteira desta variável (verificado no binário 1.13.10: com ela,
+      # o UDP usa só a porta 7882; sem ela, usaria a faixa 50000-60000).
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: true
+        logging:
+          level: warn
+    # A porta 7880 (sinalização) NÃO é publicada: o navegador chega nela por /lk, passando pelo Papo.
+    # Só a mídia precisa estar aberta para a internet. Estas portas precisam estar livres na VPS.
+    ports:
+      - "7881:7881"        # TCP (alternativa quando o UDP é bloqueado)
+      - "7882:7882/udp"    # UDP (caminho principal da mídia)
+    deploy:
+      resources:
+        limits:
+          cpus: "0.70"
+          memory: 600M
+
+volumes:
+  papo_data:

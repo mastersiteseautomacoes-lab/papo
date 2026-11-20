@@ -66,43 +66,42 @@ Entrada automática (mesma ideia da Telinha):
 
 Cada fase termina com algo que dá para testar e mostrar.
 
-### Fase 0: preparação (você e eu)
-- Você cria o aplicativo e o bot no Discord Developer Portal e guarda o token fora do projeto.
-- Escolher **nome do produto** (continua "Papo"?), **domínio** e **provedor/região da VPS** (de preferência perto do Brasil, pela latência).
-- Decidir o destino do código atual de chat (ver seção 8).
-- **Pronto quando:** domínio comprado, VPS contratada e aplicativo do bot criado.
+**Ordem revisada em 2026-11-20:** as **sessões por link** vêm antes do bot, porque entregam algo que funciona de ponta a ponta sem depender do Discord. E o **LiveKit fica na própria VPS**: o plano gratuito do LiveKit Cloud tem só 50 GB por mês (um corte duro) e não tem região no Brasil. A nuvem fica como plano B para testes.
+
+### Fase 0: preparação
+- **VPS:** escolhida (uma VPS da Hostinger com EasyPanel, com Ubuntu 24.04, 1 núcleo e ~3,8 GB, 4 TB de tráfego por mês). É **compartilhada** com outros serviços (n8n e afins), então a instalação usa imagem pronta e limites de recursos.
+- **Nome para o HTTPS:** um nome gratuito basta (endereço automático do EasyPanel, nome do provedor ou sslip.io). Domínio próprio é opcional.
+- **Discord:** o aplicativo e o bot no Discord Developer Portal só são necessários na fase 4 (o token fica só com você, nunca no Git).
+- **Pronto quando:** a branch `companheiro-discord` e a tag `chat-completo-v0.6.2` existem (feito).
 
 ### Fase 1: servidor público (resolve a dor principal)
-- Subir na VPS: servidor do Papo + LiveKit + proxy HTTPS (Caddy, que emite o certificado sozinho).
-- Abrir as portas de mídia do LiveKit (TCP 7881, UDP 7882, e TURN para quem está atrás de rede restrita).
-- Apontar o app para o domínio em vez de "Hospedar".
-- **Pronto quando:** dois PCs em casas diferentes, **sem Tailscale**, abrem o app, entram numa sala e um vê a tela do outro.
+- Imagem do servidor compilada pelo GitHub; no EasyPanel, um projeto "papo" com o servidor e o LiveKit (arquivo `deploy/docker-compose.easypanel.yml`), sem Caddy. Guia: [deploy-vps.md](deploy-vps.md).
+- Portas de mídia do LiveKit: TCP 7881 e UDP 7882.
+- **Pronto quando:** dois PCs em casas diferentes, **sem Tailscale**, abrem o app, entram numa sala e um vê a tela do outro, sem derrubar o n8n.
 
-### Fase 2: login com Discord
-- OAuth2 `identify`; sessão no servidor; avatar e nome no app.
-- Manter o acesso por nome ("convidado") para entrar por link.
+### Fase 2: sessões por link (sem Discord)
+- Criar uma sessão, compartilhar a tela e gerar um link e um código de 12 caracteres, como o "Criar sessão" da Telinha.
+- Entrar por link ou código, com um nome (convidado), pelo app ou pelo navegador, inclusive no celular.
+- **Pronto quando:** uma pessoa cria a sessão no app, outra abre o link no celular e assiste.
+
+### Fase 3: login com Discord
+- OAuth2 `identify` (nome e avatar, o mesmo acesso mínimo que a Telinha pede).
 - **Pronto quando:** abrir o app, entrar com o Discord e aparecer com nome e avatar.
 
-### Fase 3: bot e entrada automática
+### Fase 4: bot e entrada automática
 - Bot no servidor de teste (o "servidor de Acir"), com o mínimo de permissões (ver canais e o estado de voz).
-- Servidor guarda quem está em qual canal; rota de descoberta e canal em tempo real.
-- Passe só para quem o bot confirma que está no canal.
+- O servidor guarda quem está em qual canal; rota de descoberta e canal em tempo real; passe só para quem o bot confirma que está no canal.
 - **Pronto quando:** entrar na call no Discord faz o app abrir a sessão sozinho, e sair da call encerra.
 
-### Fase 4: tela e áudio (o que aprendemos da Telinha)
+### Fase 5: tela e áudio (o que aprendemos da Telinha)
 - Seletor de tela em galeria (janelas e telas ao vivo, dentro do app).
 - Qualidade: 1080p 60 fps, 1080p 30 fps (padrão) e 720p 60 fps.
 - Fonte de áudio: da janela, de um aplicativo, do desktop ou nenhum. O Discord e o Papo ficam sempre de fora (hoje o Papo exclui o próprio áudio; excluir o Discord exige captura por aplicativo).
 - **Pronto quando:** uma transmissão em 1080p 60 sem eco, com o som do jogo e sem a voz da call.
 
-### Fase 5: assistir pelo navegador e criptografia
-- Página `/assistir` com código ou link, para PC, celular e iPad.
-- Decidir criptografia de ponta a ponta (a Telinha usa a do LiveKit, com troca de chaves entre os participantes).
-- **Pronto quando:** alguém sem o app assiste uma transmissão pelo celular.
-
-### Fase 6: operação
-- Backups, monitoramento da banda, limites por sala, atualização automática do app, política de privacidade simples.
-- Como remover o bot de um servidor, para quem quiser.
+### Fase 6: criptografia e operação
+- Criptografia de ponta a ponta (a do LiveKit, com troca de chaves entre os participantes).
+- Backups, monitoramento da banda e do consumo, limites por sala, atualização automática do app, política de privacidade simples e como remover o bot de um servidor.
 
 ## 6. Custos e banda
 
@@ -141,15 +140,15 @@ O Papo de hoje é um chat completo (texto, canais, salas de voz, membros, hosped
 ## 9. Decisões em aberto
 
 - Nome do produto e domínio.
-- Provedor e região da VPS (e a franquia de tráfego que cobre o uso esperado).
+- (Decidido) VPS: a da Hostinger com EasyPanel, compartilhada. Se a call engasgar quando outros serviços disparam, a saída é uma VPS só para o Papo.
+- (Decidido) LiveKit na própria VPS; o LiveKit Cloud fica como plano B de teste.
 - Criptografia de ponta a ponta já na primeira versão, ou depois.
 - Destino do chat atual (seção 8).
 - Se o login por usuário e senha do Papo atual continua existindo para algum caso.
 - Se entrar por link (sem Discord) vale já na primeira versão.
 
-## 10. Primeiros passos práticos
+## 10. Próximos passos
 
-1. Você: criar o aplicativo e o bot no Discord Developer Portal e guardar o token.
-2. Você: escolher domínio e VPS (posso comparar opções com você).
-3. Eu: preparar o `docker-compose`, o proxy HTTPS e o `livekit.yaml` de teste (fase 1), sem segredos no repositório.
-4. Juntos: o teste de dois PCs sem Tailscale, que valida a parte mais arriscada antes de qualquer coisa no Discord.
+1. Fase 1: publicar a branch para o GitHub gerar a imagem, tornar o pacote público e criar o serviço no EasyPanel ([deploy-vps.md](deploy-vps.md)).
+2. Teste de aceite da fase 1: dois PCs em redes diferentes, sem Tailscale, vendo a tela um do outro, olhando o consumo do n8n durante a call.
+3. Só depois: fase 2 (sessões por link), fase 3 (login com Discord) e fase 4 (bot).
