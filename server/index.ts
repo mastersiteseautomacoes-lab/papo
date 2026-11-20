@@ -1,5 +1,6 @@
 import express from 'express'
 import { createServer as createHttp } from 'node:http'
+import { timingSafeEqual } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { WebSocketServer, type WebSocket } from 'ws'
@@ -18,9 +19,22 @@ const LK_KEY = process.env.LIVEKIT_API_KEY
 const LK_SECRET = process.env.LIVEKIT_API_SECRET
 const LK_TARGET = process.env.LIVEKIT_TARGET ?? 'http://127.0.0.1:7880'
 const VOICE_ENABLED = !!(LK_KEY && LK_SECRET)
+// Servidor público (atrás de um proxy HTTPS, como o Caddy):
+// - TRUST_PROXY: em quem confiar para ler o IP real de quem chega (ex.: "uniquelocal" na rede do Docker).
+//   Sem isso, o limite de tentativas enxergaria todo mundo como o IP do proxy.
+// - PAPO_SETUP_CODE: se definido, a PRIMEIRA conta (a dona do servidor) só é criada com esse código.
+//   Sem isso, qualquer pessoa que abrisse o endereço antes de você viraria a dona.
+const TRUST_PROXY = process.env.TRUST_PROXY
+const SETUP_CODE = process.env.PAPO_SETUP_CODE
 
 const app = express()
 app.disable('x-powered-by')
+if (TRUST_PROXY) app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST_PROXY) : TRUST_PROXY)
+
+function sameSecret(a: string, b: string): boolean {
+  const x = Buffer.from(a), y = Buffer.from(b)
+  return x.length === y.length && timingSafeEqual(x, y)
+}
 
 // O navegador fala com o LiveKit por /lk (mesma porta e mesmo HTTPS do Papo).
 const lkProxy = httpProxy.createProxyServer({ target: LK_TARGET, ws: true, changeOrigin: false })
@@ -123,6 +137,8 @@ app.post('/api/register', rateLimit(10, 60_000), (req, res) => {
 
   const first = one<{ n: number }>('SELECT COUNT(*) n FROM users')!.n === 0
   let server: { id: number } | undefined
+  if (first && SETUP_CODE && !(typeof inviteCode === 'string' && sameSecret(inviteCode.trim(), SETUP_CODE)))
+    return res.status(403).json({ error: 'Este servidor ainda não foi configurado. Use o código de configuração do dono.' })
   if (!first) {
     server = typeof inviteCode === 'string' ? one<{ id: number }>('SELECT id FROM servers WHERE invite_code = ?', inviteCode.trim()) : undefined
     if (!server) return res.status(403).json({ error: 'Código de convite inválido' })
@@ -375,5 +391,7 @@ wss.on('connection', (ws, req) => {
 
 http.listen(PORT, HOST, () => {
   console.log(`Papo no ar em http://${HOST}:${PORT}`)
-  if (HOST !== '127.0.0.1') console.log('Atenção: escutando fora do localhost. Prefira usar `tailscale serve`.')
+  if (HOST !== '127.0.0.1' && !TRUST_PROXY) console.log('Atenção: escutando fora do localhost. Prefira usar `tailscale serve`.')
+  if (TRUST_PROXY && !SETUP_CODE && one<{ n: number }>('SELECT COUNT(*) n FROM users')!.n === 0)
+    console.log('Atenção: servidor público sem PAPO_SETUP_CODE. Quem abrir o endereço primeiro vira o dono.')
 })

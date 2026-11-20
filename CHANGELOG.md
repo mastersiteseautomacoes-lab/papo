@@ -2,6 +2,16 @@
 
 Todas as mudanças importantes do Papo. A versão vem de `version` no `package.json`.
 
+## Em desenvolvimento (branch `companheiro-discord`)
+
+A `main` e a tag `chat-completo-v0.6.2` seguem como o chat completo. Esta branch transforma o Papo num companheiro do Discord ([plano](docs/plano-companheiro-discord.md)).
+
+### Fase 1: servidor público
+- **`deploy/`:** `docker-compose.yml`, `Dockerfile`, `Caddyfile` e `livekit.yaml` para rodar o Papo numa VPS, com HTTPS automático e sem Tailscale. Guia em [docs/deploy-vps.md](docs/deploy-vps.md). Ainda não testado numa VPS real.
+- **`TRUST_PROXY`:** o servidor lê o IP real de quem chega por trás de um proxy, para o limite de tentativas valer por pessoa.
+- **`PAPO_SETUP_CODE`:** em servidor público, a primeira conta (a dona) só é criada com esse código, para um estranho não chegar antes.
+- Texto da tela de registro ajustado para o código de configuração.
+
 ## 0.6.2 (2026-10-24)
 
 ### Corrigido

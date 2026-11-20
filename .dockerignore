@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+release
+vendor
+data
+.git
+.github
+docs
+deploy
+*.md
+npm-debug.log*
+.env
+**/.env

@@ -1,0 +1,59 @@
+# Papo na VPS: Caddy (HTTPS) + servidor do Papo + LiveKit (voz, vídeo e tela).
+# Uso (dentro da pasta deploy/): copie .env.example para .env, preencha e rode `docker compose up -d --build`.
+# Passo a passo completo: docs/deploy-vps.md
+name: papo
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      PAPO_DOMAIN: ${PAPO_DOMAIN:?defina PAPO_DOMAIN no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - papo
+
+  papo:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    # Sem "ports": só o Caddy, dentro da rede do Docker, fala com o servidor.
+    environment:
+      # Confia no IP que o Caddy repassa (rede privada do Docker) para o limite de tentativas funcionar por pessoa.
+      TRUST_PROXY: uniquelocal
+      # Sem este código, a primeira conta (a dona) não é criada. Evita que um estranho chegue antes de você.
+      PAPO_SETUP_CODE: ${PAPO_SETUP_CODE:?defina PAPO_SETUP_CODE no .env}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?defina LIVEKIT_API_KEY no .env}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?defina LIVEKIT_API_SECRET no .env}
+      LIVEKIT_TARGET: http://livekit:7880
+    volumes:
+      - papo_data:/data
+    depends_on:
+      - livekit
+
+  livekit:
+    image: livekit/livekit-server:${LIVEKIT_VERSION:-v1.13.10}
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?}: ${LIVEKIT_API_SECRET:?}"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    # A porta 7880 (sinalização) NÃO é publicada: o navegador chega nela por /lk, passando pelo Papo.
+    # Só a mídia precisa ficar aberta para a internet:
+    ports:
+      - "7881:7881"        # TCP (alternativa quando o UDP é bloqueado)
+      - "7882:7882/udp"    # UDP (caminho principal da mídia)
+
+volumes:
+  papo_data:
+  caddy_data:
+  caddy_config:

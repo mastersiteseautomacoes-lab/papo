@@ -28,3 +28,9 @@ release/
 build/
 
 vendor/
+
+# Segredos do servidor público (nunca vão para o Git)
+.env
+**/.env
+!.env.example
+!**/.env.example

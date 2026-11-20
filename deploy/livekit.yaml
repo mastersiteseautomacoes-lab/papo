@@ -1,0 +1,9 @@
+# LiveKit na VPS. As chaves NÃO ficam aqui: vêm de LIVEKIT_KEYS (veja docker-compose.yml e .env).
+port: 7880
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  # Descobre o IP público da VPS (via STUN) e o anuncia para os clientes.
+  use_external_ip: true
+logging:
+  level: warn

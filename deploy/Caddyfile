@@ -1,0 +1,6 @@
+# O Caddy obtém e renova o certificado HTTPS sozinho (Let's Encrypt) para o domínio do .env.
+# Ele também repassa WebSockets (/ws e /lk) sem configuração extra.
+{$PAPO_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy papo:38080
+}

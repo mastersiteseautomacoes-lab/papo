@@ -40,7 +40,7 @@ export default function Login({ onDone }: { onDone: () => void }) {
       <form className="auth-card" onSubmit={submit}>
         <img src="/logo.png" alt="" width={72} height={72} className="auth-logo" />
         <h1>{mode === 'login' ? 'Bem-vindo de volta!' : 'Criar conta'}</h1>
-        <p className="muted">{mode === 'login' ? 'Que bom te ver de novo no Papo.' : 'O primeiro usuário do servidor não precisa de convite.'}</p>
+        <p className="muted">{mode === 'login' ? 'Que bom te ver de novo no Papo.' : 'O primeiro usuário do servidor é o dono: sem convite, ou com o código de configuração, se o servidor tiver um.'}</p>
         <label>Usuário
           <input value={username} onChange={(e) => setUsername(e.target.value)} autoFocus autoComplete="username" required />
         </label>
@@ -50,7 +50,7 @@ export default function Login({ onDone }: { onDone: () => void }) {
         </label>
         {mode === 'register' && (
           <label>Código de convite
-            <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="deixe vazio se for o primeiro" />
+            <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="convite (o dono usa o código de configuração)" />
           </label>
         )}
         {error && <div className="form-error" role="alert">{error}</div>}
