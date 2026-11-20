@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Hash, Volume2, ChevronDown, ChevronRight, UserPlus, Settings, Mic, Headphones,
   Users, Pin, BellOff, Search, Plus, Compass, Smile, PlusCircle, LogOut, Copy, MicOff, HeadphoneOff, PhoneOff,
-  Video, VideoOff, MonitorUp, MonitorOff, Pencil, Trash2, UserMinus,
+  Video, VideoOff, MonitorUp, MonitorOff, Pencil, Trash2, UserMinus, Link2,
 } from 'lucide-react'
 import {
   api, connectSocket, getToken, setToken, ApiError,
   type Bootstrap, type Channel, type Member, type Message, type ServerEvent,
 } from './api'
 import Login from './Login'
+import { SessionHub, SessionPage } from './Session'
 import VoiceRoom from './VoiceRoom'
 import AudioSettings from './AudioSettings'
 import VolumeMenu, { type VolumeTarget } from './VolumeMenu'
@@ -52,6 +53,10 @@ function Avatar({ name, color, size = 40 }: { name: string; color: string; size?
 
 export default function App() {
   const [authed, setAuthed] = useState(() => !!getToken())
+  // Sessões por link: /j/<código> (entrar) e /s (criar ou entrar com código). Funcionam sem conta.
+  const session = location.pathname.match(/^\/j\/([^/]+)\/?$/)
+  if (session) return <SessionPage code={decodeURIComponent(session[1])} />
+  if (/^\/s\/?$/.test(location.pathname)) return <SessionHub />
   return authed
     ? <Chat onLogout={() => { setToken(null); setAuthed(false) }} />
     : <Login onDone={() => setAuthed(true)} />
@@ -352,6 +357,7 @@ function Chat({ onLogout }: { onLogout: () => void }) {
         ))}
         <button className="server-icon add" title="Criar servidor" onClick={() => setDialog({ kind: 'create-server' })}><Plus size={22} /></button>
         <button className="server-icon add" title="Entrar com convite" onClick={() => setDialog({ kind: 'join-server' })}><Compass size={22} /></button>
+        <button className="server-icon add" title="Sessão por link (compartilhar a tela sem conta)" onClick={() => location.assign('/s')}><Link2 size={22} /></button>
       </nav>
 
       <aside className="channel-panel">

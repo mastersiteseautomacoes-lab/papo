@@ -20,9 +20,11 @@ function loadVolumes(): Record<string, VolumeSetting> {
 }
 
 interface Options {
-  /** envia um evento pelo WebSocket do Papo (presença na sala) */
-  send: (payload: unknown) => void
+  /** envia um evento pelo WebSocket do Papo (presença na sala). Sessões por link não têm WebSocket. */
+  send?: (payload: unknown) => void
   onError: (message: string) => void
+  /** liga o microfone ao entrar (padrão: sim). Nas sessões por link começa desligado: quem só assiste não precisa dele. */
+  micOnJoin?: boolean
 }
 
 const EVENTS = [
@@ -41,8 +43,10 @@ const EVENTS = [
 ] as const
 
 /** Sala de voz/vídeo/tela usando o LiveKit. Uma sala por vez. */
-export function useVoice({ send, onError }: Options) {
+export function useVoice({ send: sendWs, onError, micOnJoin = true }: Options) {
+  const send = useCallback((payload: unknown) => sendWs?.(payload), [sendWs])
   const [channelId, setChannelId] = useState<number | null>(null)
+  const [sessionCode, setSessionCode] = useState<string | null>(null)
   const [status, setStatus] = useState<VoiceStatus>('idle')
   const [deafened, setDeafened] = useState(false)
   const [, rerender] = useReducer((n: number) => n + 1, 0)
@@ -126,18 +130,20 @@ export function useVoice({ send, onError }: Options) {
     appliedEngine.current = null
     setDeafened(false)
     setChannelId(null)
+    setSessionCode(null)
     setStatus('idle')
     send({ t: 'voice-leave' })
   }, [send])
 
-  const join = useCallback(async (id: number) => {
+  /** Conecta numa sala do LiveKit. `getToken` pede o passe; `enter` marca o destino; `announce` avisa o Papo (só canais). */
+  const connect = useCallback(async (getToken: () => Promise<string>, enter: () => void, announce: () => void) => {
     if (joining.current) return
     joining.current = true
     try {
       if (roomRef.current) leave()
-      setChannelId(id)
+      enter()
       setStatus('connecting')
-      const { token } = await api.voiceToken(id)
+      const token = await getToken()
       const room = new Room({
         adaptiveStream: true,
         dynacast: true,
@@ -168,12 +174,14 @@ export function useVoice({ send, onError }: Options) {
       room.startAudio().catch(() => { /* o navegador libera ao primeiro clique */ })
       applyVolumes(room) // vozes que já estavam na sala quando você entrou
       setStatus('connected')
-      send({ t: 'voice-join', channelId: id })
-      try {
-        await room.localParticipant.setMicrophoneEnabled(true)
-        await applyMic()
-      } catch {
-        onError('Sem acesso ao microfone: você entrou só ouvindo. Libere o microfone nas permissões do app ou do navegador.')
+      announce()
+      if (micOnJoin) {
+        try {
+          await room.localParticipant.setMicrophoneEnabled(true)
+          await applyMic()
+        } catch {
+          onError('Sem acesso ao microfone: você entrou só ouvindo. Libere o microfone nas permissões do app ou do navegador.')
+        }
       }
       rerender()
     } catch (e) {
@@ -181,12 +189,27 @@ export function useVoice({ send, onError }: Options) {
       roomRef.current = null
       clearAudio()
       setChannelId(null)
+      setSessionCode(null)
       setStatus('idle')
       onError(e instanceof Error && e.message ? `Não foi possível entrar na sala: ${e.message}` : 'Não foi possível entrar na sala de voz.')
     } finally {
       joining.current = false
     }
-  }, [applyMic, applyVolumes, leave, onError, send])
+  }, [applyMic, applyVolumes, leave, micOnJoin, onError, send])
+
+  /** Entra numa sala de voz de um servidor (precisa de conta). */
+  const join = useCallback((id: number) => connect(
+    async () => (await api.voiceToken(id)).token,
+    () => setChannelId(id),
+    () => send({ t: 'voice-join', channelId: id }),
+  ), [connect, send])
+
+  /** Entra numa sessão por link: com conta usa o nome dela; sem conta, o nome escolhido. */
+  const joinSession = useCallback((code: string, name?: string) => connect(
+    async () => (await api.sessionToken(code, name)).token,
+    () => setSessionCode(code),
+    () => {},
+  ), [connect])
 
   // sair ao fechar a aba/janela
   useEffect(() => () => { roomRef.current?.disconnect() }, [])
@@ -248,12 +271,12 @@ export function useVoice({ send, onError }: Options) {
   const room = roomRef.current
   const lp = room?.localParticipant
   return {
-    channelId, status, room, deafened,
+    channelId, sessionCode, status, room, deafened,
     micOn: !!lp?.isMicrophoneEnabled,
     camOn: !!lp?.isCameraEnabled,
     sharing: !!lp?.isScreenShareEnabled,
     volumes, setVolume,
-    join, leave, resync, toggleMic, toggleDeafen, toggleCamera, toggleScreen,
+    join, joinSession, leave, resync, toggleMic, toggleDeafen, toggleCamera, toggleScreen,
   }
 }
 

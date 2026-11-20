@@ -321,6 +321,19 @@ function normalizeAddress(input) {
   try { const u = new URL(s); return isAllowedUrl(u.href) ? u.origin : null } catch { return null }
 }
 
+/** Endereço de servidor, ou link de sessão (/j/<código>) e página de sessões (/s) de um servidor: devolve a origem e o endereço a abrir. */
+function parseTarget(input) {
+  let s = String(input || '').trim()
+  if (!s) return null
+  if (!/^[a-z]+:\/\//i.test(s)) s = `https://${s}`
+  try {
+    const u = new URL(s)
+    if (!isAllowedUrl(u.href)) return null
+    const keepPath = /^\/(j\/[a-z0-9-]{12,20}|s)\/?$/i.test(u.pathname)
+    return { origin: u.origin, url: keepPath ? `${u.origin}${u.pathname}` : u.origin }
+  } catch { return null }
+}
+
 function openChat(url) {
   if (!win) return
   chatOrigin = new URL(url).origin
@@ -482,13 +495,13 @@ ipcMain.handle('papo:host-open', (e) => {
 })
 ipcMain.handle('papo:join', async (e, address) => {
   if (!fromLauncher(e)) return { ok: false, error: 'negado' }
-  const origin = normalizeAddress(address)
-  if (!origin) return { ok: false, error: 'Endereço inválido. Use algo como https://nome-do-pc.tailnet.ts.net' }
+  const target = parseTarget(address)
+  if (!target) return { ok: false, error: 'Endereço inválido. Use o endereço do servidor ou o link de uma sessão (https://…/j/código).' }
   // Confere antes de abrir: se o servidor não responde, o motivo aparece aqui e não uma tela preta.
-  const probe = await pingServer(origin)
+  const probe = await pingServer(target.origin)
   if (!probe.up) return { ok: false, error: probe.reason }
-  writeConfig({ lastJoin: origin })
-  openChat(origin)
+  writeConfig({ lastJoin: target.origin })
+  openChat(target.url)
   return { ok: true }
 })
 // Seta "voltar" da tela de login do servidor aberto: só a página do servidor atual pode pedir, e só leva ao início.

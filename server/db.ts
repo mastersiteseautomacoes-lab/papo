@@ -52,6 +52,15 @@ db.exec(`
     created_at INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(channel_id, id);
+  -- Sessões por link (fase 2): sala temporária, aberta a quem tem o código, criada por uma conta.
+  CREATE TABLE IF NOT EXISTS link_sessions (
+    code TEXT PRIMARY KEY,
+    creator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    ended_at INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS idx_link_sessions_creator ON link_sessions(creator_id);
 `)
 
 const PALETTE = ['#7289ff', '#2dd4bf', '#f472b6', '#f87171', '#fbbf24', '#4ade80', '#a78bfa', '#38bdf8', '#fb923c']

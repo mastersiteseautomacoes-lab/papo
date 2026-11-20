@@ -18,6 +18,8 @@ export interface Server {
 export interface Me { id: number; name: string; color: string }
 export interface Bootstrap { me: Me; servers: Server[]; voiceEnabled: boolean }
 export interface Message { id: number; channelId: number; authorId: number; text: string; createdAt: number }
+/** Sessão por link: `me` vem preenchido quando quem consulta tem conta. */
+export interface SessionInfo { code: string; expiresAt: number; isCreator: boolean; me: { name: string } | null; participants?: number }
 
 const TOKEN_KEY = 'papo.token'
 export const getToken = () => {
@@ -61,6 +63,11 @@ export const api = {
   renameChannel: (id: number, name: string) => request(`/api/channels/${id}`, { method: 'PATCH', body: { name } }),
   deleteChannel: (id: number) => request(`/api/channels/${id}`, { method: 'DELETE' }),
   voiceToken: (channelId: number) => request<{ token: string }>('/api/voice/token', { body: { channelId } }),
+  createSession: () => request<{ code: string; expiresAt: number }>('/api/sessions', { method: 'POST', body: {} }),
+  sessionInfo: (code: string) => request<SessionInfo>(`/api/sessions/${encodeURIComponent(code)}`),
+  sessionToken: (code: string, name?: string) =>
+    request<{ token: string; name: string }>(`/api/sessions/${encodeURIComponent(code)}/token`, { body: { name } }),
+  endSession: (code: string) => request(`/api/sessions/${encodeURIComponent(code)}`, { method: 'DELETE' }),
   createServer: (name: string) => request<{ id: number }>('/api/servers', { body: { name } }),
   joinServer: (code: string) => request<{ id: number }>('/api/servers/join', { body: { code } }),
   createChannel: (serverId: number, name: string, kind: ChannelKind) =>

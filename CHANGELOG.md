@@ -6,6 +6,14 @@ Todas as mudanças importantes do Papo. A versão vem de `version` no `package.j
 
 A `main` e a tag `chat-completo-v0.6.2` seguem como o chat completo. Esta branch transforma o Papo num companheiro do Discord ([plano](docs/plano-companheiro-discord.md)).
 
+### Fase 2: sessões por link (sem Discord)
+- **Criar e entrar:** uma conta cria a sessão e recebe um link (`/j/abcd-efgh-jkmn`) e um código de 12 caracteres (alfabeto sem i, l, o, 0 e 1). Quem tem o link entra só com um nome, pelo navegador (inclusive no celular) ou colando o link no app de Windows. Página `/s` para criar ou entrar com código; ícone de link na lateral do chat.
+- **Servidor:** tabela `link_sessions` e rotas `POST /api/sessions`, `GET /api/sessions/:código`, `POST /api/sessions/:código/token` e `DELETE /api/sessions/:código`. Sala do LiveKit `s-<código>`. Validade de 12 h, no máximo 3 sessões ativas por conta, nome de convidado de 1 a 24 caracteres, só o criador encerra, e o passe do convidado não dá acesso a nenhuma conta nem ao chat.
+- **Interface:** o gancho de voz passou a entrar também em sessões (sem WebSocket do Papo e com o microfone desligado ao entrar). O contador de pessoas e a volta à tela de entrada quando a sessão é encerrada funcionam em tempo real.
+- **App de Windows:** o campo "Entrar" da tela inicial aceita o endereço do servidor ou o link completo de uma sessão.
+- **Compose do EasyPanel:** `pull_policy: always` no serviço do Papo, para um redeploy baixar a imagem nova (a tag `companheiro-discord` não muda).
+- **Testado localmente** (servidor + LiveKit do PC, navegador do app e app de Windows): criar, consultar, entrar como convidado e como conta, 2 pessoas na sala, encerrar derrubando o convidado, link com traços e em maiúsculas, limite de 3 sessões. **Ainda não testado na VPS** nem com compartilhamento de tela real entre dois computadores nesta funcionalidade.
+
 ### Fase 1: servidor público
 - **`deploy/`:** `docker-compose.yml`, `Dockerfile`, `Caddyfile` e `livekit.yaml` para rodar o Papo numa VPS, com HTTPS automático e sem Tailscale. Guia em [docs/deploy-vps.md](docs/deploy-vps.md). Ainda não testado numa VPS real.
 - **`TRUST_PROXY`:** o servidor lê o IP real de quem chega por trás de um proxy, para o limite de tentativas valer por pessoa.

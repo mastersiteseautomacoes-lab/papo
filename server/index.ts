@@ -1,6 +1,6 @@
 import express from 'express'
 import { createServer as createHttp } from 'node:http'
-import { timingSafeEqual } from 'node:crypto'
+import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { WebSocketServer, type WebSocket } from 'ws'
@@ -303,6 +303,96 @@ app.post('/api/voice/token', requireAuth, async (req, res) => {
   const at = new AccessToken(LK_KEY!, LK_SECRET!, { identity: String(userId), name: user.username, ttl: '6h' })
   at.addGrant({ room: `ch-${channelId}`, roomJoin: true, canPublish: true, canSubscribe: true, canPublishData: false })
   res.json({ token: await at.toJwt() })
+})
+
+// ---------- sessões por link ----------
+// Uma pessoa com conta cria a sessão; quem tem o código entra só com um nome (convidado). A sala do
+// LiveKit é "s-<código>". Sem WebSocket do Papo: convidados não têm conta nem presença no chat.
+const SESSION_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789' // sem i, l, o, 0 e 1, que se confundem ao digitar
+const SESSION_TTL_MS = 12 * 3600_000
+const MAX_ACTIVE_SESSIONS = 3 // por conta, para ninguém lotar o servidor de salas
+const GUEST_NAME_RE = /^[^\p{C}]{1,24}$/u // 1 a 24 caracteres, sem controle
+
+const newSessionCode = () => Array.from({ length: 12 }, () => SESSION_ALPHABET[randomInt(SESSION_ALPHABET.length)]).join('')
+
+/** Aceita "abcd-efgh-jkmn", em maiúsculas ou sem traços. Devolve o código normalizado ou null. */
+function parseSessionCode(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null
+  const c = raw.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return c.length === 12 && [...c].every((ch) => SESSION_ALPHABET.includes(ch)) ? c : null
+}
+
+const activeSession = (code: string) =>
+  one<{ code: string; creator_id: number; expires_at: number }>(
+    'SELECT code, creator_id, expires_at FROM link_sessions WHERE code = ? AND ended_at IS NULL AND expires_at > ?', code, Date.now())
+
+const optionalUser = (req: express.Request) => userFromToken(req.headers.authorization?.replace(/^Bearer /, ''))
+const sessionNotFound = { error: 'Sessão não encontrada ou encerrada' }
+
+// Limpeza das sessões antigas (de hoje em diante só as vencidas há mais de 7 dias, para depurar).
+const purgeOldSessions = () => db.prepare('DELETE FROM link_sessions WHERE expires_at < ?').run(Date.now() - 7 * 86400_000)
+purgeOldSessions()
+setInterval(purgeOldSessions, 3600_000).unref()
+
+app.post('/api/sessions', requireAuth, rateLimit(10, 60_000), (req, res) => {
+  if (!VOICE_ENABLED) return res.status(503).json({ error: 'Voz e vídeo não estão ativos neste servidor' })
+  const userId = (req as AuthedRequest).userId
+  const active = one<{ n: number }>('SELECT COUNT(*) n FROM link_sessions WHERE creator_id = ? AND ended_at IS NULL AND expires_at > ?', userId, Date.now())!.n
+  if (active >= MAX_ACTIVE_SESSIONS)
+    return res.status(429).json({ error: `Você já tem ${MAX_ACTIVE_SESSIONS} sessões ativas. Encerre uma antes de criar outra.` })
+  const now = Date.now()
+  for (let tries = 0; tries < 5; tries++) {
+    const code = newSessionCode()
+    try {
+      db.prepare('INSERT INTO link_sessions (code, creator_id, created_at, expires_at) VALUES (?, ?, ?, ?)').run(code, userId, now, now + SESSION_TTL_MS)
+      return res.json({ code, expiresAt: now + SESSION_TTL_MS })
+    } catch { /* código repetido (muito raro): tenta outro */ }
+  }
+  res.status(500).json({ error: 'Não consegui criar a sessão. Tente de novo.' })
+})
+
+app.get('/api/sessions/:code', rateLimit(60, 60_000), async (req, res) => {
+  const code = parseSessionCode(req.params.code)
+  const s = code ? activeSession(code) : undefined
+  if (!code || !s) return res.status(404).json(sessionNotFound)
+  const userId = optionalUser(req)
+  const me = userId ? one<{ username: string }>('SELECT username FROM users WHERE id = ?', userId) : undefined
+  let participants: number | undefined
+  if (VOICE_ENABLED) {
+    try { participants = (await new RoomServiceClient(LK_TARGET, LK_KEY!, LK_SECRET!).listParticipants(`s-${code}`)).length } catch { /* sala ainda vazia ou LiveKit fora */ }
+  }
+  res.json({ code, expiresAt: s.expires_at, isCreator: userId === s.creator_id, me: me ? { name: me.username } : null, participants })
+})
+
+app.post('/api/sessions/:code/token', rateLimit(30, 60_000), async (req, res) => {
+  if (!VOICE_ENABLED) return res.status(503).json({ error: 'Voz e vídeo não estão ativos neste servidor' })
+  const code = parseSessionCode(req.params.code)
+  const s = code ? activeSession(code) : undefined
+  if (!code || !s) return res.status(404).json(sessionNotFound)
+  const userId = optionalUser(req)
+  const user = userId ? one<{ username: string }>('SELECT username FROM users WHERE id = ?', userId) : undefined
+  let identity: string, name: string
+  if (user && userId) {
+    identity = `u-${userId}`; name = user.username // quem tem conta entra com o nome da conta
+  } else {
+    name = typeof req.body?.name === 'string' ? req.body.name.trim() : ''
+    if (!GUEST_NAME_RE.test(name)) return res.status(400).json({ error: 'Escolha um nome de 1 a 24 caracteres' })
+    identity = `g-${randomBytes(6).toString('hex')}`
+  }
+  const ttl = Math.max(60, Math.min(6 * 3600, Math.floor((s.expires_at - Date.now()) / 1000)))
+  const at = new AccessToken(LK_KEY!, LK_SECRET!, { identity, name, ttl })
+  at.addGrant({ room: `s-${code}`, roomJoin: true, canPublish: true, canSubscribe: true, canPublishData: false })
+  res.json({ token: await at.toJwt(), name })
+})
+
+app.delete('/api/sessions/:code', requireAuth, (req, res) => {
+  const code = parseSessionCode(req.params.code)
+  const s = code ? activeSession(code) : undefined
+  if (!code || !s) return res.status(404).json(sessionNotFound)
+  if (s.creator_id !== (req as AuthedRequest).userId) return res.status(403).json({ error: 'Só quem criou a sessão pode encerrá-la' })
+  db.prepare('UPDATE link_sessions SET ended_at = ? WHERE code = ?').run(Date.now(), code)
+  if (VOICE_ENABLED) new RoomServiceClient(LK_TARGET, LK_KEY!, LK_SECRET!).deleteRoom(`s-${code}`).catch(() => { /* sala vazia ou LiveKit fora */ })
+  res.json({ ok: true })
 })
 
 // ---------- frontend (build) ----------

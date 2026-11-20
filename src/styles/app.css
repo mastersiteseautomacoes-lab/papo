@@ -469,3 +469,20 @@ input, select { font: inherit; color: inherit; }
 .tile-volume input[type=range] { width: 110px; accent-color: #fff; }
 .tile-volume span { width: 38px; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
 .tile-label { bottom: var(--space-2); }
+
+/* ---------- Sessões por link ---------- */
+.session-page { height: 100%; display: flex; flex-direction: column; background: var(--background-base-lowest); }
+.session-bar {
+  flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3);
+  padding: var(--space-2) var(--space-4); border-bottom: 1px solid var(--border-subtle); background: var(--background-base);
+}
+.session-code { font-family: Consolas, monospace; color: var(--text-strong); font-weight: 600; letter-spacing: .02em; }
+.session-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--space-3);
+  border-radius: var(--radius-xs); background: var(--background-hover); color: var(--text-default); font-weight: 600; font-size: 14px;
+}
+.session-btn:hover { background: var(--background-active); }
+.session-btn.danger { color: #ff8a8d; }
+.session-page .auth-back, .auth-screen a.auth-back { text-decoration: none; }
+.session-link-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.session-join { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
