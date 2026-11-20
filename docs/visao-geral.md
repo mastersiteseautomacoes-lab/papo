@@ -1,57 +1,46 @@
 # Visão geral
 
-Chat de texto, voz, vídeo e compartilhamento de tela, no estilo do Discord, feito para uso pessoal entre amigos.
+O Papo é um site para **compartilhar tela, câmera e áudio com quem tem o código da sessão**, feito para uso entre amigos, como companheiro de uma chamada de voz (do Discord, por exemplo).
 
 ## Objetivo
 
-Recriar a experiência do Discord para **uso pessoal, entre amigos**, com estas exigências:
+- Transmitir a tela com **qualidade** e **sem eco**, e mostrá-la **inteira** para quem assiste.
+- **Zero instalação** para quem assiste e para quem transmite: basta o navegador (computador, e celular só para assistir).
+- Entrar com um **código de 12 letras e números** (ou um link), sem criar conta.
+- **Seu servidor, seus dados:** roda numa VPS sua, com HTTPS, sem depender de terceiros para a mídia.
+- Custo baixo: uma VPS pequena e software livre.
 
-- Layout fiel ao Discord (servidores, canais, chat, lista de membros, temas, densidade).
-- Texto em tempo real, **voz, câmera e compartilhamento de tela**.
-- Funcionar **sem pagar nada** e **sem depender de um único computador ligado o tempo todo**: qualquer amigo com Windows pode "hospedar".
-- Acesso privado, só para quem você convida (via Tailscale).
-- App instalável (`.exe`), e também acessível pelo navegador (para quem usa Mac).
-
-Não usa a API nem os servidores do Discord. É um sistema próprio. O nome, a logo e as fontes **não** são do Discord.
+Não usa a API nem os servidores do Discord. O nome, a logo e as fontes **não** são do Discord.
 
 ## Como surgiu
 
-1. **Análise do Discord:** olhamos o app desktop em uso (screenshots) e comparamos com os tokens de CSS: colunas, hierarquia, tema escuro, estados de hover, menus de contexto, painel flutuante de canais.
-2. **Front-end fiel:** React + Vite + TypeScript, com tokens de design em 3 camadas (primitivas, semânticas, de componente), 4 temas (escuro, mais escuro, meia-noite, claro) e 3 densidades.
-3. **Backend de texto:** servidor Node com WebSocket, banco SQLite, login com convite, servidores, canais, mensagens salvas, presença online e "digitando…".
-4. **Acesso privado com Tailscale:** o servidor roda no PC e é publicado só dentro da rede Tailscale, com HTTPS.
-5. **App instalável (Electron):** tela inicial com **Hospedar** e **Entrar**. Hospedar liga o servidor embutido e roda o `tailscale serve` sozinho.
-6. **Ícone e logo** do Papo aplicados no instalador, janela, bandeja e telas.
-7. **Voz, vídeo e tela (LiveKit):** servidor de mídia open source embutido no app, salas de voz, câmera, compartilhamento de tela.
-8. **Bandeja do sistema:** fechar a janela enquanto hospeda só a esconde; o servidor continua no ar.
-9. **Melhorias de design:** painel de voz na lateral, sala que se adapta a janelas pequenas, botões de ampliar e tela cheia nos blocos, remoção do botão Threads.
-10. **Gestão:** renomear e excluir canais, salas de voz e servidores (só o dono); **remover membros** (só o dono) e **sair de um servidor** (qualquer membro). Retiramos as ações da mensagem (reagir, responder, encaminhar, mais) e o botão de presente, que não seriam usados.
-11. **Tratamento de áudio:** filtros de ruído (RNNoise e GTCRN), portão de ruído próprio, ganho de entrada, escolha de microfone, seleção automática de canal (fones que saem só por um lado) e assistente de calibração.
-12. **Amigos (0.6.0):** na tela inicial (Hospedar / Entrar), uma lista de servidores de amigos. O app confere de 30 em 30 segundos quais estão no ar e avisa com uma notificação do Windows quando um servidor volta a ficar online (também com a janela escondida na bandeja). O servidor ganhou a rota `/api/health`, sem login e sem dados, que só responde `{"papo":true}`.
-13. **Seta "Início" (0.6.0):** na tela de login de um servidor há uma seta no canto superior esquerdo que volta à tela de Hospedar / Entrar, para trocar de servidor. Só existe no app instalado. Atalho: `Ctrl+Shift+H`.
+1. **Chat completo (até a 0.6.2):** o Papo nasceu como um clone do Discord para uso pessoal: texto, canais, voz, vídeo e tela, hospedado no PC de um amigo e acessado pelo Tailscale, com app de Windows (Electron). Esse código está na tag `chat-completo-v0.6.2`.
+2. **Análise de um produto parecido:** olhamos como outro projeto de amigos resolvia só a parte de transmitir tela, câmera e áudio, entrando com um código. A ideia (não o código nem a marca) inspirou o rumo novo.
+3. **Companheiro de chamada (0.7.0):** o chat e o app de Windows saíram. O Papo ficou só com **sessões**, num servidor público numa VPS, que qualquer um abre no navegador. Os próximos passos são o login com a conta do Discord e um bot que abre a sessão sozinho ([roadmap](roadmap.md)).
 
 ## Como funciona
 
 ```
- Amigo (app Papo ou navegador)
-        │  HTTPS (Tailscale)
+ Navegador (computador ou celular)
+        │  HTTPS
         ▼
- https://NOME-DO-PC.tailXXXX.ts.net   ← publicado por "tailscale serve" (só dentro da rede Tailscale)
+ https://seu-endereço         ← proxy HTTPS da VPS (EasyPanel/Traefik ou Caddy)
         │
         ▼
- Servidor do Papo (Node, porta 38080 local)
-   ├─ Interface (React)   ├─ API + WebSocket (texto, presença)
-   ├─ Banco SQLite        └─ Proxy /lk  ──►  LiveKit (voz, vídeo e tela)
-                                              portas 7880 (local), 7881 TCP e 7882 UDP
+ Servidor do Papo (Node, contêiner "papo")
+   ├─ Interface (React)         ├─ API: contas e sessões
+   ├─ Banco SQLite              └─ Proxy /lk ──► LiveKit (contêiner "livekit")
+                                                   mídia: portas 7881 (TCP) e 7882 (UDP)
 ```
 
-- **Quem hospeda** roda o servidor no próprio PC. Contas, canais e mensagens ficam **no PC do anfitrião**.
-- **Quem entra** só se conecta ao endereço do anfitrião. Não precisa instalar nada de programação.
-- A **mídia** (áudio e vídeo) passa direto pelo Tailscale, entre os PCs.
+- **Quem cria** a sessão tem uma conta no servidor. O servidor sorteia o código de 12 caracteres e cria uma sala no LiveKit (`s-<código>`).
+- **Quem entra** só informa o código e um nome. O servidor confere se a sessão existe e não expirou e entrega um **passe** (válido só para aquela sala).
+- A **mídia** vai do navegador de quem transmite para o LiveKit, e de lá para cada espectador. O servidor do Papo não vê nem grava o vídeo.
 
 ## Limites importantes
 
-- **Cada anfitrião tem o seu próprio servidor** e histórico. Se o Bruno hospedar numa noite e você em outra, são servidores diferentes, com contas separadas.
-- O servidor só existe **enquanto o Papo está aberto, em "Hospedar", num PC ligado**.
-- **Só Windows pode hospedar** (não existe versão para Mac ainda). Mac **entra** normalmente pelo navegador.
-- A banda de **upload do anfitrião** limita transmissões de tela para várias pessoas.
+- **O servidor é central:** se a VPS ou o Docker caírem, as sessões caem. As contas e os códigos ativos ficam no banco e voltam quando o servidor volta.
+- **A banda de saída da VPS** limita a quantidade de espectadores e a qualidade: cada espectador recebe uma cópia da transmissão (veja [custos](seguranca.md#custos)).
+- **Só computadores transmitem a tela.** Celular e tablet entram, assistem, ouvem e falam, mas o navegador deles não compartilha a tela.
+- **Quem tem o código entra e pode transmitir:** compartilhe só com quem você quer por perto. A sessão expira em 12 horas e o criador pode encerrá-la.
+- **Contas:** só quem tem conta cria sessões. A primeira conta (a dona) exige o código de configuração do servidor; as outras exigem o código de convite da dona.

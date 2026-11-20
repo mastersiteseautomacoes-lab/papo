@@ -50,7 +50,7 @@ export function SessionPage({ code: rawCode }: { code: string }) {
   const [volMenu, setVolMenu] = useState<VolumeTarget | null>(null)
   const [audioOpen, setAudioOpen] = useState(false)
   const flash = useCallback((m: string) => { setToast(m); window.setTimeout(() => setToast(''), 6000) }, [])
-  const voice = useVoice({ onError: flash, micOnJoin: false })
+  const voice = useVoice({ onError: flash, micOnJoin: false }) // começa sem microfone: quem só assiste não precisa dele
 
   useEffect(() => {
     let alive = true
@@ -152,12 +152,7 @@ export function SessionPage({ code: rawCode }: { code: string }) {
         <button className="session-btn" onClick={() => setAudioOpen(true)} title="Áudio e microfone"><Settings size={16} /> Áudio</button>
         {info.isCreator && <button className="session-btn danger" onClick={end} title="Encerra a sessão para todos"><LogOut size={16} /> Encerrar</button>}
       </header>
-      <VoiceRoom
-        voice={voice}
-        channelName="da sessão"
-        memberById={() => undefined}
-        onVolumeMenu={setVolMenu}
-      />
+      <VoiceRoom voice={voice} onVolumeMenu={setVolMenu} />
       {volMenu && (
         <VolumeMenu
           target={volMenu}

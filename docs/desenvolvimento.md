@@ -1,37 +1,83 @@
-# Desenvolvimento e instalador
+# Desenvolvimento
 
-## Gerar um instalador novo
+## Pré-requisitos
+
+- **Node.js 24** (o servidor usa `node:sqlite`, que vem embutido).
+- Para testar a **voz, o vídeo e a tela** no seu PC: um servidor **LiveKit** local (veja abaixo). Sem ele, o Papo abre, cria contas e sessões, mas a sala não conecta.
+
+## Rodar pelo código
 
 ```bash
-cd C:\Dev\Papo
-npm install              # só na primeira vez
-npm run dist:win         # gera release\Papo Setup X.Y.Z.exe
+npm install
+npm run dev:server     # servidor com recarga (http://127.0.0.1:3000)
+npm run dev            # interface com recarga (http://localhost:5173), já aponta para o servidor
 ```
 
-- Para mudar o número da versão, edite `version` em `package.json`.
-- O `livekit-server.exe` precisa estar em `vendor/` (baixar de github.com/livekit/livekit/releases, arquivo `livekit_<versão>_windows_amd64.zip`).
-- Testar sem instalar: `npm run app`. Servidor e interface em modo de desenvolvimento: `npm run dev:server` e `npm run dev`.
-- Teste sem mexer no Tailscale: variável `PAPO_SKIP_TAILSCALE=1`. Para rodar dois anfitriões na mesma máquina: `PAPO_LK_PORT=7990` (usa as portas 7990 a 7992).
+Para ver o resultado final, como na VPS:
 
-O instalador **não é assinado digitalmente**: o Windows mostra um aviso (SmartScreen). Clique em **Mais informações**, **Executar assim mesmo**.
+```bash
+npm run build          # tsc -b + vite build  -> dist/
+npm run server         # entrega dist/ em http://127.0.0.1:3000
+```
 
-## Publicar o instalador (Google Drive)
+Outros comandos: `npm run build:server` (gera `build/server.cjs`), `npm run typecheck:server` e `npm run lint` (oxlint).
 
-O instalador não vai para o Git (120 MB, e `release/` está no `.gitignore`). Quem chega ao repositório baixa pelo link do README, que aponta para um arquivo no Google Drive:
+O **primeiro usuário** que se registra vira o dono. Sem `PAPO_SETUP_CODE` definido, o campo "Código de convite" pode ficar vazio nessa primeira conta. As outras contas usam o código de convite que o dono vê no menu com o próprio nome.
 
-https://drive.google.com/file/d/14uMZQNLMUCT5LvVCjzy4Lr2iVAL-xOqV/view
+## Servidor LiveKit local
 
-Ao lançar uma versão nova:
+Baixe o `livekit-server` da versão **1.13.10** em github.com/livekit/livekit/releases (no Windows, o arquivo `livekit_<versão>_windows_amd64.zip`) e coloque o `livekit-server.exe` na pasta `vendor/` (ela não vai para o Git). No Mac ou no Linux, use o binário da sua plataforma ou a imagem `livekit/livekit-server:v1.13.10` do Docker.
 
-1. Gere o instalador (`npm run dist:win`).
-2. No Drive, clique com o botão direito no arquivo → **Gerenciar versões** → **Enviar nova versão** e escolha o novo `.exe`. Assim o link continua o mesmo. (Se criar um arquivo novo, troque o link no `README.md` e em [instalacao.md](instalacao.md).)
-3. Confira que o acesso segue como "Qualquer pessoa com o link" e que o nome do arquivo no Drive mostra a versão certa.
-4. Atualize o número de versão nos documentos (README, [instalacao.md](instalacao.md) e [CHANGELOG](../CHANGELOG.md)).
+Inicie o LiveKit e o Papo **com as mesmas chaves** (valores de teste, inventados por você):
 
-## Tamanhos
+```bash
+# Terminal 1: LiveKit (a configuração inteira vem de variáveis de ambiente)
+LIVEKIT_KEYS="chavetest: segredotestesegredotestesegredoteste12" \
+LIVEKIT_CONFIG=$'port: 7880\nbind_addresses:\n - 127.0.0.1\nrtc:\n tcp_port: 7881\n udp_port: 7882\nlogging:\n level: error\n' \
+./vendor/livekit-server.exe
 
-| O que | Tamanho |
+# Terminal 2: Papo (as mesmas chaves)
+LIVEKIT_API_KEY=chavetest LIVEKIT_API_SECRET=segredotestesegredotestesegredoteste12 npm run dev:server
+```
+
+No PowerShell, o equivalente do terminal 1 é:
+
+```powershell
+$env:LIVEKIT_KEYS = "chavetest: segredotestesegredotestesegredoteste12"
+$env:LIVEKIT_CONFIG = "port: 7880`nbind_addresses:`n - 127.0.0.1`nrtc:`n tcp_port: 7881`n udp_port: 7882`n"
+.\vendor\livekit-server.exe
+```
+
+O Papo procura o LiveKit em `LIVEKIT_TARGET` (padrão `http://127.0.0.1:7880`). Para ter **dois LiveKit na mesma máquina**, mude as três portas na configuração e ajuste `LIVEKIT_TARGET`.
+
+> Os valores acima são só de teste local. Os da VPS são outros e **não vão para o Git**.
+
+## Variáveis de ambiente do servidor
+
+| Variável | Para quê | Padrão |
+|---|---|---|
+| `PORT`, `HOST` | Onde o servidor escuta | `3000`, `127.0.0.1` (na imagem Docker: `38080`, `0.0.0.0`) |
+| `DB_FILE` | Arquivo do banco | `data/papo.db` |
+| `DIST_DIR` | Pasta da interface compilada | `dist` |
+| `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Chaves do LiveKit. Sem elas, voz e sessões ficam desligadas | (vazio) |
+| `LIVEKIT_TARGET` | Endereço interno do LiveKit | `http://127.0.0.1:7880` |
+| `PAPO_SETUP_CODE` | Código exigido para criar a **primeira** conta | (vazio) |
+| `TRUST_PROXY` | Em quem confiar para ler o IP real (por trás de um proxy, `uniquelocal`) | (vazio) |
+
+## Testar
+
+Não há suíte de testes automática. Os testes feitos até agora foram roteiros em Node que sobem o servidor e o LiveKit locais e conferem a API (criar e entrar na sessão, limites, encerramento) e, com um Chrome sem janela, a interface (uma tela falsa de 1920×1080 publicada como compartilhamento de tela, em vários tamanhos de janela). Antes de abrir um PR: `npm run lint`, `npm run build` e `npm run typecheck:server`.
+
+## Lançar uma versão nova
+
+1. Mude `version` em `package.json` e atualize o [CHANGELOG](../CHANGELOG.md), o README e os documentos que citam o número.
+2. Envie para a `main`. O GitHub gera sozinho a imagem `ghcr.io/<dono>/papo-server:main` (aba **Actions**).
+3. No EasyPanel, **reimplante** o serviço `papo`: o compose usa `pull_policy: always`, então ele baixa a imagem nova. O banco (volume `papo_data`) não é tocado.
+4. Marque a versão com uma tag (`git tag vX.Y.Z` e `git push origin vX.Y.Z`).
+
+## Tags do Git
+
+| Tag | O que é |
 |---|---|
-| Instalador (o que se envia) | ~120 MB |
-| App instalado | ~426 MB (a maior parte é o Electron; LiveKit ocupa 55 MB) |
-| Dados do servidor | cresce com as mensagens (16 MB no início) |
+| `chat-completo-v0.6.2` | O Papo antigo (chat completo, app de Windows, hospedagem com Tailscale), congelado |
+| `v0.7.0` | A primeira versão só de sessões, no navegador |

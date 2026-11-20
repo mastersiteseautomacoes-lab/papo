@@ -4,46 +4,47 @@ Guia para quem programa no Papo, inclusive agentes como o Claude Code. Para ente
 
 ## O que é
 
-Chat estilo Discord (texto, voz, vídeo, tela) para uso pessoal entre amigos. Servidor Node no PC de quem hospeda, acesso privado pelo Tailscale, app de Windows em Electron. Não usa a API do Discord, e nome, logo e fontes não são do Discord.
+Companheiro para chamadas de voz (como as do Discord): **sessões** em que amigos compartilham tela, câmera e áudio entrando com um código de 12 letras (ou um link), só pelo navegador. Servidor Node numa VPS com HTTPS (EasyPanel), LiveKit na própria VPS para a mídia. Não usa a API do Discord (por enquanto), e nome, logo e fontes não são do Discord. O chat completo e o app de Windows (Electron) saíram na 0.7.0 e estão na tag `chat-completo-v0.6.2`.
 
 ## Comandos
 
 ```bash
 npm install
 npm run dev:server     # servidor com recarga (porta 3000)
-npm run dev            # interface em http://localhost:5173
+npm run dev            # interface em http://localhost:5173 (proxy para o servidor)
 npm run build          # tsc -b + vite build  -> dist/
 npm run build:server   # esbuild -> build/server.cjs
 npm run typecheck:server
 npm run lint           # oxlint
-npm run app            # build + servidor + abre o Electron
-npm run dist:win       # gera release/Papo Setup X.Y.Z.exe
+npm run server         # sobe o servidor (entrega o dist/ já compilado)
 ```
 
-Teste sem mexer no Tailscale: `PAPO_SKIP_TAILSCALE=1`. Dois anfitriões na mesma máquina: `PAPO_LK_PORT=7990`.
+Para testar voz, vídeo e tela localmente é preciso um LiveKit local e as variáveis `LIVEKIT_API_KEY`/`LIVEKIT_API_SECRET`: veja [docs/desenvolvimento.md](docs/desenvolvimento.md). Não há suíte de testes automática.
 
 ## Mapa
 
 | Caminho | O que é |
 |---|---|
-| `src/` | Interface React. `Home.tsx` (início: código de 12 letras, criar sessão), `Session.tsx` (sessão em `/j/<código>`), `VoiceRoom.tsx` (sala), `Login.tsx`, `voice.ts`, `api.ts`, `audio/`, `styles/`. O chat saiu desta branch (está na tag `chat-completo-v0.6.2`) |
-| `server/` | `index.ts` (rotas, WebSocket, proxy `/lk`), `db.ts` (SQLite), `auth.ts` (scrypt, sessões, limites) |
-| `electron/` | `main.cjs` (janela, bandeja, servidor, LiveKit, Tailscale, amigos), `preload.cjs`, `launcher.*` |
+| `src/` | Interface React. `Home.tsx` (início: código de 12 letras, criar sessão), `Session.tsx` (sessão em `/j/<código>`), `VoiceRoom.tsx` (sala), `Login.tsx`, `voice.ts`, `api.ts`, `audio/`, `styles/` |
+| `server/` | `index.ts` (rotas, proxy `/lk`), `db.ts` (SQLite), `auth.ts` (scrypt, sessões de login, limites) |
 | `public/worklets/` | AudioWorklets em JavaScript puro (portão, seletor de canal, gravador) |
+| `deploy/` | `Dockerfile`, `docker-compose.easypanel.yml` (caminho principal), `docker-compose.yml` + `Caddyfile` (VPS limpa), `livekit.yaml` |
+| `.github/workflows/` | Gera a imagem `ghcr.io/<dono>/papo-server` a cada mudança na `main` |
 | `docs/` | Documentação por assunto |
 
-Mapa completo: [docs/estrutura.md](docs/estrutura.md). Como foi construído: [docs/arquitetura.md](docs/arquitetura.md).
+Mapa completo: [docs/estrutura.md](docs/estrutura.md). Como foi construído: [docs/arquitetura.md](docs/arquitetura.md). Plano e fases: [docs/plano-companheiro-discord.md](docs/plano-companheiro-discord.md).
 
 ## Regras do projeto
 
-- **Linguagem:** TypeScript no `src/` e no `server/`. JavaScript puro no `electron/` e nos worklets. A interface e os textos para o usuário são em **português do Brasil**.
-- **Estilo visual:** use os tokens de `src/styles/tokens.css` (primitivas, semânticas, de componente), nunca cores soltas. Os temas são classes no `<html>`.
-- **Servidor:** escuta só em `127.0.0.1`. Quem expõe é o `tailscale serve`, **nunca `tailscale funnel`**.
-- **Segurança do Electron:** só a tela inicial (`launcher.html`) usa as funções do `preload.cjs`. A exceção é `papo:home`, que a página do servidor aberto pode chamar e que só volta ao início. Novas funções exigem checar de onde vem o pedido (`fromLauncher`).
-- **Mensagens e SQL:** texto de mensagem é exibido como texto puro. Consultas usam parâmetros (`?`), nunca texto concatenado.
-- **Segredos:** `config.json` e `livekit.yaml` contêm a chave do servidor de voz e não vão para o Git. Não escreva endereços `.ts.net` reais, senhas nem chaves em arquivos do repositório.
-- **Não vão para o Git:** `node_modules/`, `dist/`, `build/`, `release/`, `vendor/` (o `livekit-server.exe`) e `data/` (o banco).
+- **Linguagem:** TypeScript no `src/` e no `server/`. JavaScript puro nos worklets. A interface e os textos para o usuário são em **português do Brasil**.
+- **Estilo visual:** use os tokens de `src/styles/tokens.css` (primitivas, semânticas, de componente), nunca cores soltas. Os temas são classes no `<html>`; a interface usa só o escuro.
+- **Servidor:** por padrão escuta só em `127.0.0.1`. Na imagem Docker escuta em `0.0.0.0` **atrás do proxy HTTPS** (Traefik/Caddy), com `TRUST_PROXY` definido. O sinal do LiveKit (porta 7880) **não é publicado**: o navegador chega nele pelo `/lk` do Papo. Só 80, 443, 7881/TCP e 7882/UDP ficam abertas.
+- **Sessões e contas:** quem tem conta cria sessões; entrar numa sessão só precisa do código e de um nome. A primeira conta exige `PAPO_SETUP_CODE`. As tabelas `servers` e `members` guardam só o código de convite da dona (nome herdado do chat); `channels` e `messages` não são mais criadas nem lidas, mas **nunca apague nem altere** um banco existente.
+- **Mensagens e SQL:** nomes e textos são exibidos como texto puro. Consultas usam parâmetros (`?`), nunca texto concatenado.
+- **Segredos:** `PAPO_SETUP_CODE`, `LIVEKIT_API_KEY` e `LIVEKIT_API_SECRET` ficam nas variáveis do serviço (EasyPanel) ou num `.env` fora do Git. Não escreva o endereço real da VPS, senhas nem chaves em arquivos do repositório.
+- **Não vão para o Git:** `node_modules/`, `dist/`, `build/`, `release/`, `vendor/` (o `livekit-server.exe`), `data/` (o banco) e `.env`.
 - **Documentação junto com a mudança:** ao mudar comportamento, atualize o `docs/` correspondente e o [CHANGELOG](CHANGELOG.md) na mesma alteração.
-- **Versão:** o número vem de `version` no `package.json`; ao subir, atualize o CHANGELOG, o README e os nomes `Papo Setup X.Y.Z.exe` nos documentos.
-- **Instalador:** o `.exe` é distribuído por um link do Google Drive (no README e em `docs/instalacao.md`), não pelo Git. Ao lançar versão nova, envie o novo `.exe` como nova versão do mesmo arquivo no Drive; veja [docs/desenvolvimento.md](docs/desenvolvimento.md).
+- **Versão:** o número vem de `version` no `package.json`; ao subir, atualize o CHANGELOG, o README e os documentos que citam a versão, e marque a tag (`vX.Y.Z`).
+- **Publicar:** enviar à `main` gera a imagem no GitHub; depois, reimplante o serviço `papo` no EasyPanel. Veja [docs/deploy-vps.md](docs/deploy-vps.md) e [docs/desenvolvimento.md](docs/desenvolvimento.md).
 - **Limite conhecido:** `node:sqlite` ainda é experimental no Node.
+- **Licenças:** outros produtos só servem de inspiração de ideia: **não copie código, textos, desenhos nem marca**.

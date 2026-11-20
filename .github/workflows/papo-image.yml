@@ -4,7 +4,7 @@ name: Imagem do servidor do Papo
 # A VPS só baixa a imagem pronta: compilar lá gastaria memória e processador dos outros serviços.
 on:
   push:
-    branches: [companheiro-discord]
+    branches: [main]
     paths:
       - "server/**"
       - "src/**"

@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
-import { ArrowLeft, Check, ChevronDown, ClipboardPaste, Copy, LogOut, Plus } from 'lucide-react'
+import { Check, ChevronDown, ClipboardPaste, Copy, LogOut, Plus } from 'lucide-react'
 import { api, ApiError, getToken, setToken } from './api'
 import Login from './Login'
 import { copyText, extractCode, normalizeCode } from './Session'
 
 const CODE_LEN = 12
-
-// Só existe dentro do app instalado (Electron): volta à tela de escolher o servidor.
-const goLauncher = (window as unknown as { papo?: { home?: () => Promise<boolean> } }).papo?.home
 
 /** 12 caixas em 3 grupos de 4: digita, apaga e cola (o código ou o link inteiro). */
 function CodeInput({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit: () => void }) {
@@ -87,8 +84,8 @@ export default function Home() {
   useEffect(() => {
     if (!authed) { setAccount(null); return }
     let alive = true
-    api.bootstrap()
-      .then((b) => { if (alive) setAccount({ name: b.me.name, invite: b.servers.find((s) => s.isOwner)?.inviteCode }) })
+    api.me()
+      .then((b) => { if (alive) setAccount({ name: b.me.name, invite: b.inviteCode }) })
       .catch((e) => { if (e instanceof ApiError && e.status === 401) { setToken(null); if (alive) setAuthed(false) } })
     return () => { alive = false }
   }, [authed])
@@ -134,9 +131,7 @@ export default function Home() {
   return (
     <div className="home" onClick={() => setMenuOpen(false)}>
       <header className="home-top">
-        {goLauncher
-          ? <button className="session-btn" onClick={() => goLauncher()} title="Voltar e escolher outro servidor"><ArrowLeft size={16} /> Trocar de servidor</button>
-          : <span />}
+        <span />
         {account ? (
           <div className="home-account" onClick={(e) => e.stopPropagation()}>
             <button className="session-btn" onClick={() => setMenuOpen((o) => !o)}>

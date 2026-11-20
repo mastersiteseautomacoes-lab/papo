@@ -1,11 +1,10 @@
-# Imagem do servidor do Papo para a VPS (interface + API + WebSocket + proxy /lk).
+# Imagem do servidor do Papo para a VPS (interface + API de contas e sessões + proxy /lk do LiveKit).
 # O LiveKit e o Caddy rodam em contêineres próprios (veja docker-compose.yml).
 # Contexto de build: a raiz do repositório.
 
 FROM node:24-slim AS build
 WORKDIR /app
-# O Electron só é usado no app de Windows; não precisa baixar o binário aqui.
-ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm_config_update_notifier=false npm_config_fund=false
+ENV npm_config_update_notifier=false npm_config_fund=false
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

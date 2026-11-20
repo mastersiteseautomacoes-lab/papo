@@ -4,11 +4,11 @@
 
 # Papo
 
-**Chat de texto, voz, vídeo e compartilhamento de tela no estilo do Discord, feito para você e seus amigos. Roda no seu computador, é privado e gratuito.**
+**Compartilhe a tela, a câmera e o áudio com seus amigos usando só um código de 12 letras. Sem instalar nada: funciona no navegador.**
 
-**[⬇ Baixar o Papo (Windows)](https://drive.google.com/file/d/14uMZQNLMUCT5LvVCjzy4Lr2iVAL-xOqV/view)** · [Instalação](docs/instalacao.md) · [Como usar](docs/uso.md) · [Estrutura](docs/estrutura.md) · [Arquitetura](docs/arquitetura.md) · [Roadmap](docs/roadmap.md)
+[Como usar](docs/uso.md) · [Publicar o seu servidor](docs/deploy-vps.md) · [Arquitetura](docs/arquitetura.md) · [Estrutura](docs/estrutura.md) · [Roadmap](docs/roadmap.md)
 
-![versão](https://img.shields.io/badge/vers%C3%A3o-0.6.2-5865f2) ![plataforma](https://img.shields.io/badge/hospeda%20em-Windows-0078d4) ![acesso](https://img.shields.io/badge/acesso-privado%20(Tailscale)-2ea44f) ![linguagem](https://img.shields.io/badge/TypeScript-3178c6)
+![versão](https://img.shields.io/badge/vers%C3%A3o-0.7.0-5865f2) ![acesso](https://img.shields.io/badge/acesso-pelo%20navegador-2ea44f) ![hospedagem](https://img.shields.io/badge/hospedagem-sua%20VPS%20(Docker)-0078d4) ![linguagem](https://img.shields.io/badge/TypeScript-3178c6)
 
 </div>
 
@@ -16,58 +16,58 @@
 
 ## Como ele é
 
-> **Em reformulação (branch `companheiro-discord`):** o chat de texto saiu e o Papo passa a ser só de **sessões** (tela, câmera e áudio, entrando com um código de 12 letras). A captura abaixo mostra a versão com chat, congelada na tag `chat-completo-v0.6.2`; ela será refeita quando a nova interface estiver fechada. Veja o [plano](docs/plano-companheiro-discord.md).
-
 <p align="center">
-  <img src="docs/assets/papo-sala-de-voz.png" alt="Papo com uma sala de voz aberta e uma tela compartilhada: servidores à esquerda, canais de texto e de voz, a transmissão no centro e a lista de membros online e offline à direita" width="860" />
+  <img src="docs/assets/inicio.png" alt="Tela inicial do Papo: 12 caixas para digitar o código da sessão, os botões Colar e Entrar e a opção Criar uma sessão" width="760" />
 </p>
 
-*Sala de voz com tela compartilhada: servidores, canais de texto e de voz, a transmissão no centro e os membros à direita.*
+*Tela inicial: quem recebeu um código digita (ou cola) e entra. Quem tem conta cria uma sessão.*
+
+<p align="center">
+  <img src="docs/assets/sessao-assistindo.png" alt="Sessão do Papo: a tela de quem transmite aparece inteira no centro, com as pessoas da sessão numa faixa embaixo e os controles de microfone, fones, câmera, compartilhar tela e sair" width="760" />
+</p>
+
+*Dentro de uma sessão: a tela de quem transmite aparece inteira, em qualquer tamanho de janela.*
 
 ## O que é
 
-O Papo é um **servidor de chat pessoal** com a cara do Discord. Um amigo com Windows "hospeda" no próprio computador, os outros entram pelo app ou pelo navegador, e só quem recebe o convite consegue acessar. Não usa a API nem os servidores do Discord: é um sistema próprio, e o nome, a logo e as fontes não são do Discord.
+O Papo é um **companheiro para chamadas de voz** (como as do Discord): a conversa continua onde você já conversa, e o Papo cuida de **transmitir tela, câmera e áudio com qualidade**. Funciona assim:
+
+1. Alguém com uma conta clica em **Criar uma sessão** e recebe um **link** e um **código de 12 letras e números** (por exemplo `abcd-efgh-jkmn`).
+2. Manda o link ou o código para os amigos.
+3. Cada amigo abre o link (ou digita o código na tela inicial), escolhe um nome e entra. **Não precisa de conta nem de instalar programa**, no computador ou no celular.
+4. Quem quiser transmite a tela (com o som do computador), liga a câmera ou o microfone. Os outros assistem.
+
+Não usa a API nem os servidores do Discord. É um sistema próprio, e o nome, a logo e as fontes não são do Discord.
 
 ## O que ele faz
 
-| Conversar | Falar e ver | Manter privado |
+| Transmitir | Assistir | Manter sob controle |
 |---|---|---|
-| Servidores, canais de texto e de voz | Salas de voz, câmera e compartilhamento de tela | Acesso só por convite, dentro da rede [Tailscale](https://tailscale.com) |
-| Mensagens em tempo real, "digitando…" e presença online | Volume de cada pessoa de 0 a 200% | Senhas com hash (scrypt) e limite de tentativas |
-| 4 temas e 3 densidades de layout | Filtros de ruído, portão de ruído e calibração do microfone | Dados ficam no PC de quem hospeda |
-| Lista de **Amigos** com aviso de servidor no ar | App instalável (`.exe`) e acesso pelo navegador | Nada vai para a internet aberta |
+| Tela inteira, janela ou aba, até 1080p | A tela aparece **inteira** (sem cortes) em qualquer tamanho de janela | Entra só quem tem o código (12 caracteres aleatórios) |
+| Som do computador **sem o eco** da própria chamada | Funciona no **celular e no tablet** (para assistir) | A sessão vale 12 horas e quem criou pode encerrá-la a qualquer hora |
+| Câmera e microfone, com **filtros de ruído** e portão de ruído | Volume de cada pessoa de 0 a 200%, voz e tela separados | Senhas com hash (scrypt) e limite de tentativas |
+| Selo **NO AR** com resolução e quadros por segundo | Ampliar e tela cheia | O servidor é seu: nenhum dado vai para terceiros |
 
 ## Como funciona
 
 ```
- Amigo (app Papo ou navegador)
-        │  HTTPS (Tailscale)
+ Navegador (computador ou celular)
+        │  HTTPS
         ▼
- https://NOME-DO-PC.tailXXXX.ts.net      ← publicado por "tailscale serve" (só dentro da rede Tailscale)
-        │
-        ▼
- Servidor do Papo (Node, no PC de quem hospeda)
-   ├─ Interface (React)    ├─ API + WebSocket (texto e presença)
-   ├─ Banco SQLite         └─ Proxy /lk ──► LiveKit (voz, vídeo e tela)
+ Seu servidor (uma VPS com Docker)
+   ├─ papo     ─ interface (React), API de contas e sessões, banco SQLite, proxy /lk
+   └─ livekit  ─ recebe a tela, a câmera e o áudio e entrega a cada espectador
 ```
 
-Quem hospeda roda o servidor no próprio PC. Quem entra só precisa do endereço e do código de convite. Mais detalhes em [docs/visao-geral.md](docs/visao-geral.md).
+O servidor do Papo entrega a página e emite um "passe" para cada pessoa entrar na sala da sessão. A mídia passa pelo [LiveKit](https://livekit.io), um servidor de chamadas de código aberto, que roda no mesmo servidor. Detalhes em [docs/visao-geral.md](docs/visao-geral.md) e [docs/arquitetura.md](docs/arquitetura.md).
 
 ## Começar
 
-**Usar o app (Windows)**
+**Usar** (você só precisa do endereço do servidor de alguém, ou do seu): abra o endereço no navegador, digite o código e entre. [Passo a passo](docs/uso.md).
 
-1. [Baixe o instalador](https://drive.google.com/file/d/14uMZQNLMUCT5LvVCjzy4Lr2iVAL-xOqV/view) (`Papo Setup 0.6.2.exe`, ~120 MB, no Google Drive), instale o **Papo** e o **Tailscale**. Como o instalador não é assinado, o Windows pode avisar: clique em **Mais informações** e depois em **Executar assim mesmo**.
-2. No painel do Tailscale, ative **HTTPS Certificates** (aba DNS).
-3. Abra o Papo e escolha **Hospedar** (para ligar o seu servidor) ou **Entrar** (para usar o de um amigo).
+**Publicar o seu servidor:** o Papo roda em qualquer VPS com Docker, com HTTPS. A imagem do servidor é compilada pelo GitHub, então a VPS não precisa compilar nada. O guia completo (EasyPanel ou VPS limpa, com as portas, as variáveis e o teste de aceite) está em [docs/deploy-vps.md](docs/deploy-vps.md).
 
-Passo a passo completo, com a mensagem pronta para mandar aos amigos: [docs/instalacao.md](docs/instalacao.md).
-
-**Entrar pelo navegador (Mac, ou sem instalar nada)**
-
-Com o Tailscale conectado e o compartilhamento aceito, abra o endereço do anfitrião no Chrome, registre-se com o código de convite e use. Quem usa Mac entra, mas não consegue hospedar.
-
-**Rodar pelo código**
+**Rodar pelo código** (para desenvolver):
 
 ```bash
 npm install
@@ -75,24 +75,16 @@ npm run build
 npm run server        # servidor em http://127.0.0.1:3000
 ```
 
-Para desenvolver com recarga automática, gerar o instalador e baixar o `livekit-server.exe`: [docs/desenvolvimento.md](docs/desenvolvimento.md) e [docs/rodar-pelo-codigo.md](docs/rodar-pelo-codigo.md).
-
-### Plataformas
-
-| Sistema | Hospedar | Entrar |
-|---|---|---|
-| Windows (app instalado) | Sim | Sim |
-| Mac | Ainda não | Sim, pelo navegador |
+A voz precisa de um servidor LiveKit local. Como baixá-lo, como desenvolver com recarga automática e como testar: [docs/desenvolvimento.md](docs/desenvolvimento.md).
 
 ## Mapa do repositório
 
 | Pasta | O que tem |
 |---|---|
-| [`src/`](src) | Interface em React + TypeScript (telas, voz, tratamento de áudio, estilos) |
-| [`server/`](server) | Servidor Node: rotas HTTP, WebSocket, banco SQLite e login |
-| [`electron/`](electron) | App de Windows: janela, bandeja, tela inicial (Hospedar, Entrar, Amigos) |
-| [`public/`](public) | Logos e programas de áudio que rodam no navegador |
-| [`assets/`](assets) | Ícones do app |
+| [`src/`](src) | Interface em React + TypeScript: tela inicial, sessão, sala, áudio e estilos |
+| [`server/`](server) | Servidor Node: rotas HTTP, banco SQLite, contas e sessões, proxy do LiveKit |
+| [`public/`](public) | Logo e os programas de áudio que rodam no navegador |
+| [`deploy/`](deploy) | Dockerfile e os arquivos de publicação (EasyPanel e VPS limpa) |
 | [`docs/`](docs) | Toda a documentação |
 
 O mapa completo, com o que fica de fora do Git: [docs/estrutura.md](docs/estrutura.md).
@@ -102,20 +94,22 @@ O mapa completo, com o que fica de fora do Git: [docs/estrutura.md](docs/estrutu
 | Preciso de… | Comece por |
 |---|---|
 | Entender o projeto | [Visão geral](docs/visao-geral.md) |
-| Instalar e mandar aos amigos | [Instalação](docs/instalacao.md) |
-| Usar no dia a dia (hospedar, voz, volumes, amigos) | [Uso](docs/uso.md) |
+| Criar ou entrar numa sessão | [Como usar](docs/uso.md) |
 | Configurar o microfone | [Áudio e microfone](docs/audio.md) |
+| Colocar o meu servidor no ar | [Publicar na VPS](docs/deploy-vps.md) |
 | Resolver um problema | [Solução de problemas](docs/solucao-de-problemas.md) |
 | Saber como foi construído (linguagens, banco, voz, build) | [Arquitetura](docs/arquitetura.md) |
 | Achar um arquivo | [Estrutura do repositório](docs/estrutura.md) |
-| Mexer no código e gerar o instalador | [Desenvolvimento](docs/desenvolvimento.md) |
+| Mexer no código e publicar uma versão | [Desenvolvimento](docs/desenvolvimento.md) |
 | Segurança, privacidade e custos | [Segurança](docs/seguranca.md) |
-| O que falta fazer | [Roadmap](docs/roadmap.md) |
+| O que vem a seguir (login com Discord, bot) | [Roadmap](docs/roadmap.md) e [plano](docs/plano-companheiro-discord.md) |
 | O que mudou em cada versão | [CHANGELOG](CHANGELOG.md) |
 
 ## Estado do projeto
 
-Versão **0.6.2**, em uso entre amigos. Texto, convites, presença, gestão de canais, voz e vídeo (na mesma máquina), tela e o app instalável já foram testados. Ainda falta confirmar em uso real a voz entre computadores diferentes e a lista de Amigos. O detalhe está no [roadmap](docs/roadmap.md).
+Versão **0.7.0**, no ar numa VPS e em uso entre amigos. Já foram testados: criar e entrar numa sessão por código, transmitir a tela e assistir em outro computador e no celular, o áudio da tela sem eco e a publicação na VPS com EasyPanel. **Próximos passos:** login com a conta do Discord e um bot que abre a sessão sozinho para quem entra no canal de voz ([roadmap](docs/roadmap.md)).
+
+**Versão antiga:** o Papo começou como um chat completo no estilo do Discord (texto, canais, app de Windows hospedado no próprio PC com Tailscale). Esse código está preservado na tag [`chat-completo-v0.6.2`](https://github.com/mastersiteseautomacoes-lab/papo/tree/chat-completo-v0.6.2) e não recebe mais mudanças.
 
 ## Licença
 

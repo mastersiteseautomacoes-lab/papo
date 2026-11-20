@@ -4,22 +4,20 @@ Ponto de partida para quem chega ao repositório. Para uma visão rápida, veja 
 
 | Documento | Para quê |
 |---|---|
-| [visao-geral.md](visao-geral.md) | O que é o Papo, como surgiu, como funciona e quais são os limites |
-| [instalacao.md](instalacao.md) | Instalar, hospedar e mandar o app aos amigos (inclui Mac e "outro amigo hospeda") |
-| [uso.md](uso.md) | Dia a dia: hospedar, voz, volumes, gestão de servidor, lista de Amigos |
+| [visao-geral.md](visao-geral.md) | O que é o Papo, como funciona e quais são os limites |
+| [uso.md](uso.md) | Dia a dia: criar uma sessão, entrar, transmitir, assistir, volumes |
 | [audio.md](audio.md) | Microfone: supressão de ruído, portão, ganho, calibração |
+| [deploy-vps.md](deploy-vps.md) | Colocar o seu servidor no ar numa VPS com HTTPS: EasyPanel (imagem pronta) ou VPS limpa (Caddy) |
 | [solucao-de-problemas.md](solucao-de-problemas.md) | Sintomas comuns e o que verificar |
-| [arquitetura.md](arquitetura.md) | Como foi construído: linguagens, design system, servidor, banco, voz, Electron, build |
-| [estrutura.md](estrutura.md) | Mapa das pastas e onde ficam os dados |
-| [desenvolvimento.md](desenvolvimento.md) | Gerar o instalador, versões, testes sem Tailscale |
-| [rodar-pelo-codigo.md](rodar-pelo-codigo.md) | Rodar pelo navegador, sem o app instalado |
+| [arquitetura.md](arquitetura.md) | Como foi construído: linguagens, servidor, banco, voz, áudio, build |
+| [estrutura.md](estrutura.md) | Mapa das pastas e o que fica fora do Git |
+| [desenvolvimento.md](desenvolvimento.md) | Rodar e testar pelo código, versões, lançar uma versão nova |
 | [seguranca.md](seguranca.md) | O que protege o servidor, privacidade e custos |
-| [roadmap.md](roadmap.md) | O que está testado, o que falta e ideias futuras |
-| [deploy-vps.md](deploy-vps.md) | Colocar o Papo numa VPS com HTTPS, sem Tailscale: caminho A (EasyPanel, imagem pronta) e B (VPS limpa, Caddy). Fase 1; ainda não testado numa VPS real |
-| [plano-companheiro-discord.md](plano-companheiro-discord.md) | Rascunho de plano: Papo como companheiro do Discord (bot, servidor central, sem Tailscale) |
+| [roadmap.md](roadmap.md) | O que está pronto, o que vem a seguir e ideias futuras |
+| [plano-companheiro-discord.md](plano-companheiro-discord.md) | O plano do produto: fases, custos de banda, riscos e decisões |
 
 Também na raiz: [CHANGELOG.md](../CHANGELOG.md) (histórico de versões) e [CLAUDE.md](../CLAUDE.md) (guia para quem programa, inclusive com o Claude Code).
 
 ## Imagens
 
-`assets/` guarda a logo e a captura de tela do README (`papo-sala-de-voz.png`: sala de voz com tela compartilhada). Faltam capturas da tela inicial e do chat.
+`assets/` guarda a logo e as capturas de tela do README: a tela inicial (`inicio.png`), a sessão assistindo e transmitindo (`sessao-assistindo.png`, `sessao-transmitindo.png`) e no celular (`sessao-celular.png`). As capturas usam nomes de exemplo, e a tela transmitida é um desenho gerado para o teste.

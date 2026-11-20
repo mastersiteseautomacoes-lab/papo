@@ -1,25 +1,24 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState, type CSSProperties } from 'react'
 import { Track, type Participant, type Room } from 'livekit-client'
 import { Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, PhoneOff, Headphones, HeadphoneOff, Maximize, Minimize, ZoomIn, ZoomOut, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react'
-import type { Member } from './api'
 import { MAX_VOLUME, type AudioSource, type VoiceState, type VolumeSetting } from './voice'
 import type { VolumeTarget } from './VolumeMenu'
 
 interface Props {
   voice: VoiceState
-  channelName: string
-  memberById: (id: number) => Member | undefined
   /** abre o menu de volume de uma pessoa (ou da tela dela) */
   onVolumeMenu: (t: VolumeTarget) => void
 }
 
 const GAP = 8
+const AVATAR_COLORS = ['#7289ff', '#2dd4bf', '#f472b6', '#f87171', '#fbbf24', '#4ade80', '#a78bfa', '#38bdf8', '#fb923c']
+/** Uma cor estável por pessoa, tirada da identidade dela (convidados não têm cor guardada). */
+const avatarColor = (identity: string) => AVATAR_COLORS[[...identity].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % AVATAR_COLORS.length]
 const RATIO = 16 / 9
 
 interface TileProps {
   p: Participant
   source: Track.Source
-  member?: Member
   style?: CSSProperties
   focused?: boolean
   onToggleFocus?: () => void
@@ -29,7 +28,7 @@ interface TileProps {
   onVolumeMenu?: (x: number, y: number) => void
 }
 
-function Tile({ p, source, member, style, focused, onToggleFocus, volume, onVolume, onVolumeMenu }: TileProps) {
+function Tile({ p, source, style, focused, onToggleFocus, volume, onVolume, onVolumeMenu }: TileProps) {
   const ref = useRef<HTMLVideoElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
   const [full, setFull] = useState(false)
@@ -55,8 +54,8 @@ function Tile({ p, source, member, style, focused, onToggleFocus, volume, onVolu
     return () => { track.detach(el) }
   }, [track])
 
-  const name = member?.name ?? p.name ?? 'Convidado'
-  const color = member?.color ?? '#949ba4'
+  const name = p.name || 'Convidado'
+  const color = avatarColor(p.identity)
   return (
     <div ref={boxRef} style={style} onDoubleClick={toggleFull} onContextMenu={(e) => { if (onVolumeMenu) { e.preventDefault(); onVolumeMenu(e.clientX, e.clientY) } }} className={`tile ${isScreen ? 'screen' : ''} ${!isScreen && p.isSpeaking ? 'speaking' : ''}`}>
       {track ? (
@@ -133,8 +132,8 @@ function SelfLive({ stats, onPreview }: { stats: string; onPreview: () => void }
   )
 }
 
-function Stage({ voice, memberById, onVolumeMenu, previewSelf, onPreviewSelf }: {
-  voice: VoiceState; memberById: Props['memberById']; onVolumeMenu: Props['onVolumeMenu']
+function Stage({ voice, onVolumeMenu, previewSelf, onPreviewSelf }: {
+  voice: VoiceState; onVolumeMenu: Props['onVolumeMenu']
   previewSelf: boolean; onPreviewSelf: () => void
 }) {
   const room = voice.room!
@@ -150,8 +149,7 @@ function Stage({ voice, memberById, onVolumeMenu, previewSelf, onPreviewSelf }: 
   }, [])
 
   const participants: Participant[] = [room.localParticipant, ...room.remoteParticipants.values()]
-  const member = (p: Participant) => memberById(Number(p.identity))
-  const nameOf = (p: Participant) => member(p)?.name ?? p.name ?? 'Convidado'
+  const nameOf = (p: Participant) => p.name || 'Convidado'
   const volOf = (p: Participant, src: AudioSource): VolumeSetting => voice.volumes[`${p.identity}:${src}`] ?? { vol: 1, muted: false }
   /** props de volume do bloco: voz nos blocos de câmera, áudio da tela nos blocos de tela; nada no seu próprio */
   const volProps = (p: Participant, source: Track.Source) => {
@@ -188,7 +186,7 @@ function Stage({ voice, memberById, onVolumeMenu, previewSelf, onPreviewSelf }: 
         <div className="stage">
           <div className="stage-main">
             {main ? (
-              <Tile p={main.p} source={main.source} member={member(main.p)} style={{ width: '100%', height: '100%' }}
+              <Tile p={main.p} source={main.source} style={{ width: '100%', height: '100%' }}
                 focused={focusKey === main.key} onToggleFocus={() => setFocusKey(focusKey === main.key ? null : main.key)}
                 {...volProps(main.p, main.source)} />
             ) : (
@@ -197,7 +195,7 @@ function Stage({ voice, memberById, onVolumeMenu, previewSelf, onPreviewSelf }: 
           </div>
           <div className="strip" style={{ height: stripH }}>
             {all.filter((x) => !main || x.key !== main.key).map((x) => (
-              <Tile key={x.key} p={x.p} source={x.source} member={member(x.p)} style={tileStyle}
+              <Tile key={x.key} p={x.p} source={x.source} style={tileStyle}
                 onToggleFocus={() => setFocusKey(x.key)} {...volProps(x.p, x.source)} />
             ))}
           </div>
@@ -206,7 +204,7 @@ function Stage({ voice, memberById, onVolumeMenu, previewSelf, onPreviewSelf }: 
     } else {
       const { w, h } = bestGrid(cams.length, box.w, box.h)
       content = cams.map((x) => (
-        <Tile key={x.key} p={x.p} source={x.source} member={member(x.p)} style={{ width: w, height: h }}
+        <Tile key={x.key} p={x.p} source={x.source} style={{ width: w, height: h }}
           onToggleFocus={() => setFocusKey(x.key)} {...volProps(x.p, x.source)} />
       ))
     }
@@ -215,7 +213,7 @@ function Stage({ voice, memberById, onVolumeMenu, previewSelf, onPreviewSelf }: 
   return <div className={`tiles ${hasMain ? 'with-screen' : ''}`} ref={ref}>{content}</div>
 }
 
-export default function VoiceRoom({ voice, channelName, memberById, onVolumeMenu }: Props) {
+export default function VoiceRoom({ voice, onVolumeMenu }: Props) {
   const [previewSelf, setPreviewSelf] = useState(false)
   const [, tick] = useReducer((n: number) => n + 1, 0)
   // enquanto transmite, atualiza de vez em quando a resolução e os quadros por segundo mostrados
@@ -226,14 +224,14 @@ export default function VoiceRoom({ voice, channelName, memberById, onVolumeMenu
   }, [voice.sharing])
 
   if (voice.status === 'connecting' || !voice.room) {
-    return <div className="voice-room"><div className="voice-wait">Conectando à sala <strong>{channelName}</strong>…</div></div>
+    return <div className="voice-room"><div className="voice-wait">Conectando à sessão…</div></div>
   }
   const stats = voice.sharing ? screenStats(voice.room) : ''
   // celulares e tablets não conseguem compartilhar a tela: lá a pessoa só assiste (e pode usar câmera e microfone)
   const canShare = typeof navigator.mediaDevices?.getDisplayMedia === 'function'
   return (
     <div className="voice-room">
-      <Stage voice={voice} memberById={memberById} onVolumeMenu={onVolumeMenu} previewSelf={previewSelf} onPreviewSelf={() => setPreviewSelf(true)} />
+      <Stage voice={voice} onVolumeMenu={onVolumeMenu} previewSelf={previewSelf} onPreviewSelf={() => setPreviewSelf(true)} />
       <div className="voice-controls">
         <div className="vc-status">
           {voice.sharing && <><span className="live-badge">NO AR</span>{stats && <small>{stats}</small>}</>}

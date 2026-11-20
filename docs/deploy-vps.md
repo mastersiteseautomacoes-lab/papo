@@ -1,24 +1,22 @@
-# Servidor público do Papo na VPS (fase 1)
+# Publicar o servidor do Papo numa VPS
 
-Guia para colocar o Papo numa VPS, com HTTPS, para os amigos entrarem **sem Tailscale**. Faz parte do [plano do companheiro do Discord](plano-companheiro-discord.md).
+Guia para colocar o Papo numa VPS, com HTTPS, para os amigos entrarem pelo navegador, **sem Tailscale e sem instalar nada**.
 
 Há dois caminhos. Use o **A** se a VPS já tem o **EasyPanel** (ele ocupa as portas 80 e 443). Use o **B** numa VPS limpa.
 
-> **Estado (2026-11-20):** o **caminho A foi executado de verdade** numa VPS com EasyPanel 2.38 e funciona até o HTTPS.
+> **Estado (2026-11-20):** o **caminho A foi executado de verdade** numa VPS com EasyPanel 2.38 e está em uso.
 >
 > **Verificado na VPS:**
 > - a imagem gerada pelo GitHub é baixada e os contêineres do Papo e do LiveKit sobem;
 > - `https://<endereço>/api/health` responde `{"papo":true}`, com certificado válido, vindo da internet;
 > - o proxy `/lk` chega ao LiveKit (responde "OK");
 > - a criação da primeira conta é recusada sem o código de configuração (403);
-> - a porta de mídia **TCP 7881** está aberta para a internet.
+> - a porta de mídia **TCP 7881** está aberta para a internet;
+> - **uma sessão com tela real** foi transmitida e vista em outro computador (não medimos se a mídia foi por UDP 7882 ou TCP 7881).
 >
 > **Ainda não verificado:**
-> - a mídia **UDP 7882** (um teste simples de STUN ficou sem resposta, o que é inconclusivo);
-> - o vídeo e a tela passando entre dois PCs em redes diferentes (o teste de aceite abaixo);
-> - o consumo de processador e memória durante uma call, e o efeito nos outros serviços da VPS.
->
-> O caminho B (VPS limpa com Caddy) continua sem teste.
+> - o consumo de processador e memória durante uma call longa, e o efeito nos outros serviços da VPS;
+> - o caminho B (VPS limpa com Caddy), que continua sem teste.
 
 ## O que sobe
 
@@ -41,7 +39,7 @@ Arquivo: [`deploy/docker-compose.easypanel.yml`](../deploy/docker-compose.easypa
 - **Projeto separado.** Crie um projeto novo ("papo") e não mexa nos serviços existentes.
 
 ### A2. Gerar a imagem
-1. Envie a branch `companheiro-discord` ao GitHub. O workflow roda sozinho (aba **Actions** do repositório) e publica `ghcr.io/<dono>/papo-server:companheiro-discord`.
+1. Envie as mudanças à branch `main` do GitHub (num fork ou repositório seu). O workflow roda sozinho (aba **Actions** do repositório) e publica `ghcr.io/<dono>/papo-server:main`. No compose, troque `<dono>` pelo seu usuário do GitHub (a linha `image:` de `docker-compose.easypanel.yml`).
 2. Confirme que o pacote é **público**: na primeira publicação ele pode nascer privado (em GitHub → seu perfil → **Packages** → `papo-server` → **Package settings** → **Change visibility** → **Public**). No nosso teste ele já saiu público e o EasyPanel baixou a imagem sem login. A alternativa é cadastrar um registro no EasyPanel com um token somente leitura, que vale só para você.
 
 ### A3. Criar o serviço no EasyPanel
@@ -50,7 +48,7 @@ Passos executados de verdade, no EasyPanel 2.38:
 1. **Projeto novo** ("papo") e, nele, **Serviço → Compose**, com o nome `papo`.
 2. Aba **Source** → botão **Git** (não cole o YAML: o editor de código do painel não aceita preenchimento simples). Preencha:
    - **Repository URL:** `https://github.com/<dono>/papo.git`
-   - **Branch:** `companheiro-discord`
+   - **Branch:** `main`
    - **Build Path:** `/deploy`
    - **Docker Compose File:** `docker-compose.easypanel.yml`
 
@@ -88,7 +86,7 @@ Veja a seção "Teste de aceite" mais abaixo.
 
 Arquivo: [`deploy/docker-compose.yml`](../deploy/docker-compose.yml). Inclui o Caddy, que obtém o certificado HTTPS sozinho. **Este caminho compila a imagem na própria VPS**, então ela precisa de memória livre para o build (cerca de 1,5 GB ou mais).
 
-1. **VPS:** Linux (Ubuntu 24.04 serve), IP público fixo, franquia de tráfego que cubra o uso (conta em [plano-companheiro-discord.md](plano-companheiro-discord.md#6-custos-e-banda)) e região perto dos amigos.
+1. **VPS:** Linux (Ubuntu 24.04 serve), IP público fixo, franquia de tráfego que cubra o uso (conta em [plano-companheiro-discord.md](plano-companheiro-discord.md#5-custos-e-banda)) e região perto dos amigos.
 2. **Domínio:** um registro **A** apontando para o IP da VPS (pode ser um nome gratuito, como DuckDNS ou sslip.io).
 3. **Firewall:** libere 22 (SSH), 80 e 443 (TCP e UDP), 7881 (TCP) e 7882 (UDP). Por exemplo, com `ufw`:
 
@@ -100,7 +98,7 @@ Arquivo: [`deploy/docker-compose.yml`](../deploy/docker-compose.yml). Inclui o C
 5. **Projeto e configuração:**
 
    ```bash
-   git clone --branch companheiro-discord https://github.com/mastersiteseautomacoes-lab/papo.git
+   git clone https://github.com/mastersiteseautomacoes-lab/papo.git
    cd papo/deploy
    cp .env.example .env
    nano .env        # domínio, código de configuração, chave e segredo do LiveKit
@@ -112,19 +110,20 @@ Arquivo: [`deploy/docker-compose.yml`](../deploy/docker-compose.yml). Inclui o C
 
 ---
 
-## Teste de aceite (a fase 1 só termina aqui)
+## Teste de aceite
 
 1. No navegador, abra `https://seu-endereço/api/health`. Deve mostrar `{"papo":true}` com o cadeado do HTTPS.
-2. Abra `https://seu-endereço`, clique em **Registrar** e crie a **primeira conta**: o campo "Código de convite" recebe o `PAPO_SETUP_CODE`. Essa conta vira a dona. Sem o código certo, a criação é recusada.
-3. No ícone de convidar, pegue o código de convite e crie a conta de um amigo em **outro computador, em outra rede, sem Tailscale**.
-4. Entrem na mesma sala de voz e compartilhem a tela de um para o outro.
-5. Repita com um dos dois no **celular com dados móveis** (rede diferente e mais restrita).
+2. Abra `https://seu-endereço`, clique em **Entrar na conta**, depois em **Registrar** e crie a **primeira conta**: o campo "Código de convite" recebe o `PAPO_SETUP_CODE`. Essa conta vira a dona. Sem o código certo, a criação é recusada.
+3. Clique em **Criar uma sessão**. Aparece a sessão com o link e o código. Use **Convidar** para copiar o link.
+4. Em **outro computador, em outra rede**, abra o link, escolha um nome e entre. Em um deles, clique em **Compartilhar tela**: o outro deve ver a tela inteira.
+5. Repita com um dos dois no **celular com dados móveis** (rede diferente e mais restrita): o celular entra e assiste.
+6. Para criar a conta de um amigo, pegue o código de convite no menu com o seu nome (tela inicial).
 
-Se o passo 4 mostra a tela dos dois lados, a fase 1 está validada. O app de Windows também funciona: em **Entrar**, cole `https://seu-endereço`.
+Se o passo 4 mostra a tela do outro lado, o servidor está validado.
 
 ## Atualizar e cuidar
 
-- **Caminho A:** envie as mudanças à branch; o workflow gera a imagem nova; no EasyPanel, **reimplante** o serviço (ele baixa a imagem atualizada).
+- **Caminho A:** envie as mudanças à branch `main`; o workflow gera a imagem nova; no EasyPanel, **reimplante** o serviço (ele baixa a imagem atualizada). O banco, no volume `papo_data`, não é tocado.
 - **Caminho B:** `cd papo && git pull && cd deploy && docker compose up -d --build`.
 - **Backup:** o banco fica no volume `papo_data` (`/data/papo.db`). Copie-o de vez em quando; no EasyPanel, use a função de backup de volumes, se a sua versão tiver, ou o console do serviço.
 - **Logs:** pelo painel do EasyPanel (caminho A) ou `docker compose logs papo` e `docker compose logs livekit` (caminho B).
@@ -145,5 +144,6 @@ Se o passo 4 mostra a tela dos dois lados, a fase 1 está validada. O app de Win
 
 ## Pontos de atenção
 
-- Quem abre o endereço vê a tela de login; o acesso a servidores e canais depende do código de convite.
-- Esta fase mantém o login por usuário e senha do Papo atual. As sessões por link, o login com Discord e o bot vêm nas próximas fases.
+- Quem abre o endereço vê a tela inicial e **pode entrar numa sessão se tiver o código**. Criar sessões exige conta, e criar contas exige o código de convite da dona.
+- O acesso por usuário e senha do Papo é provisório: o login com o Discord e o bot vêm nas próximas fases ([roadmap](roadmap.md)).
+- Não coloque o endereço real da sua VPS, nem chaves e códigos, em arquivos do repositório.

@@ -2,36 +2,42 @@
 
 Todas as mudanças importantes do Papo. A versão vem de `version` no `package.json`.
 
-## Em desenvolvimento (branch `companheiro-discord`)
+## 0.7.0 (2026-11-20): o Papo vira só de sessões, no navegador
 
-A `main` e a tag `chat-completo-v0.6.2` seguem como o chat completo. Esta branch transforma o Papo num companheiro do Discord ([plano](docs/plano-companheiro-discord.md)).
+O Papo passou a ser um **companheiro de chamadas**: só sessões (tela, câmera e áudio) com um código de 12 letras, num servidor público numa VPS, usado pelo navegador. O chat completo e o app de Windows foram **removidos**; o código antigo continua na tag `chat-completo-v0.6.2`. Plano: [docs/plano-companheiro-discord.md](docs/plano-companheiro-discord.md).
 
-### Remodelação da interface: só sessões
+### Removido
+- **App de Windows (Electron):** `electron/`, `assets/`, `iniciar.bat`, o script `dist:win`, a hospedagem no PC com Tailscale e a lista de Amigos. O instalador `Papo Setup 0.6.2.exe` deixa de ser distribuído (o link do Google Drive saiu do README).
+- **Chat no servidor:** rotas e WebSocket de servidores, canais, mensagens, presença e voz por canal. O servidor ficou com **contas e sessões**. As tabelas `channels` e `messages` não são mais criadas nem lidas; um banco antigo abre normalmente, sem nenhuma alteração (testado com o servidor da 0.6.2).
+- **Dependências:** `electron`, `electron-builder`, `ws` e `@types/ws` (o servidor continua em um arquivo só, `build/server.cjs`).
+- **Documentação do produto antigo:** `docs/instalacao.md`, `docs/rodar-pelo-codigo.md` e a captura da sala de voz com o chat (que mostrava nomes reais).
+
+### Mudou
+- **README e `docs/` reescritos** para o produto novo, com capturas de tela novas (nomes de exemplo e uma tela de teste gerada).
+- **Publicação:** o workflow que gera a imagem Docker agora roda na `main`, e o `docker-compose.easypanel.yml` usa a tag `main` por padrão. No EasyPanel, a **Source** deve apontar para a branch `main`.
+- `vite.config.ts` sem o proxy `/ws` (o servidor não tem mais WebSocket do Papo).
+- CSS enxugado: saíram os estilos do chat e do app de Windows (verificado com 27 conferências visuais).
+
+### Interface só de sessões (no ar desde 2026-11-20)
 - **Corrigido: vídeo cortado ao alargar a janela.** O bloco do vídeo era um `grid` de altura automática com o vídeo em `height: 100%`: numa janela larga, a altura natural do vídeo (16:9 na largura toda) passava da do bloco e o excesso era cortado embaixo (a barra de tarefas sumia). O vídeo agora preenche o bloco por posicionamento absoluto e a tela aparece inteira em qualquer tamanho.
-- **Nova tela inicial** (`/`): 12 caixas para o código (digitar, apagar, colar o código ou o link), **Entrar**, **Colar**, **Criar uma sessão** e o menu da conta (nome, código de convite do dono, sair).
-- **Chat removido da interface.** Servidores, canais e mensagens ficam só na tag `chat-completo-v0.6.2` e na `main`. As rotas do servidor continuam (as contas e os convites dependem delas); a limpeza fica para depois.
-- **Sessão no estilo da Telinha (só a organização, sem copiar marca, desenhos nem código):** cabeçalho com código, nº de pessoas, **Convidar**, **Áudio** e **Encerrar**; a **sua tela fica escondida** ("Sua tela está no ar") com **Ver minha tela** (acaba o espelho infinito); selo **NO AR** com resolução e quadros por segundo; botões **Compartilhar tela** / **Parar tela**.
-- **Áudio e microfone** (supressão de ruído, portão, calibração) acessíveis dentro da sessão, pelo botão **Áudio**.
+- **Nova tela inicial** (`/`): 12 caixas para o código (digitar, apagar, colar o código ou o link), **Entrar**, **Colar**, **Criar uma sessão** e o menu da conta (nome, código de convite da dona, sair).
+- **Sessão no estilo de um companheiro de chamada (só a organização, sem copiar marca, desenhos nem código):** cabeçalho com código, nº de pessoas, **Convidar**, **Áudio** e **Encerrar**; a **sua tela fica escondida** ("Sua tela está no ar") com **Ver minha tela** (acaba o espelho infinito); selo **NO AR** com resolução e quadros por segundo; botões **Compartilhar tela** / **Parar tela**.
+- **Áudio e microfone** (supressão de ruído, portão, calibração) dentro da sessão, pelo botão **Áudio**.
 - **Celular e tablet:** o botão de compartilhar tela não aparece (esses aparelhos só assistem); a faixa de pessoas rola sem esconder o começo; os 12 campos do código cabem na tela.
-- **Testado** com um Chrome sem janela e uma tela falsa 1920×1080 com marcas nos quatro cantos: em 5 tamanhos de janela (1280×720, 1900×600, 1000×900, 800×1000 e 390×844) o vídeo cabe no bloco, usa `contain`, a barra de controles fica visível e a página não rola. Também: digitar e apagar no código, criar sessão, convidado, "Sua tela está no ar", NO AR, "Ver minha tela" e parar a tela. **Ainda falta** testar com um compartilhamento de tela real e na VPS.
+- **Testado** com um Chrome sem janela e uma tela falsa 1920×1080 com marcas nos quatro cantos: em 5 tamanhos de janela (1280×720, 1900×600, 1000×900, 800×1000 e 390×844) o vídeo cabe no bloco, usa `contain`, a barra de controles fica visível e a página não rola. **Confirmado em uso real** pelo dono, com compartilhamento de tela de verdade entre dois computadores.
 
-### Fase 2: sessões por link (sem Discord)
-- **Criar e entrar:** uma conta cria a sessão e recebe um link (`/j/abcd-efgh-jkmn`) e um código de 12 caracteres (alfabeto sem i, l, o, 0 e 1). Quem tem o link entra só com um nome, pelo navegador (inclusive no celular) ou colando o link no app de Windows. Página `/s` para criar ou entrar com código; ícone de link na lateral do chat.
-- **Servidor:** tabela `link_sessions` e rotas `POST /api/sessions`, `GET /api/sessions/:código`, `POST /api/sessions/:código/token` e `DELETE /api/sessions/:código`. Sala do LiveKit `s-<código>`. Validade de 12 h, no máximo 3 sessões ativas por conta, nome de convidado de 1 a 24 caracteres, só o criador encerra, e o passe do convidado não dá acesso a nenhuma conta nem ao chat.
-- **Interface:** o gancho de voz passou a entrar também em sessões (sem WebSocket do Papo e com o microfone desligado ao entrar). O contador de pessoas e a volta à tela de entrada quando a sessão é encerrada funcionam em tempo real.
-- **App de Windows:** o campo "Entrar" da tela inicial aceita o endereço do servidor ou o link completo de uma sessão.
-- **Compose do EasyPanel:** `pull_policy: always` no serviço do Papo, para um redeploy baixar a imagem nova (a tag `companheiro-discord` não muda).
-- **Testado localmente** (servidor + LiveKit do PC, navegador do app e app de Windows): criar, consultar, entrar como convidado e como conta, 2 pessoas na sala, encerrar derrubando o convidado, link com traços e em maiúsculas, limite de 3 sessões. **Publicada na VPS (2026-11-20):** o deploy baixou a imagem nova (o LiveKit seguiu rodando, sem ser recriado) e o servidor público responde com as rotas e a interface novas (401 ao criar sem conta, 404 para código inexistente, páginas `/s` e `/j/…` do app novo). **Ainda falta** um teste com compartilhamento de tela real entre dois computadores usando uma sessão por link.
+### Sessões por código ou link (fase 2)
+- **Criar e entrar:** uma conta cria a sessão e recebe um link (`/j/abcd-efgh-jkmn`) e um código de 12 caracteres (alfabeto sem i, l, o, 0 e 1). Quem tem o link entra só com um nome, pelo navegador (inclusive no celular).
+- **Servidor:** tabela `link_sessions` e rotas `POST /api/sessions`, `GET /api/sessions/:código`, `POST /api/sessions/:código/token` e `DELETE /api/sessions/:código`. Sala do LiveKit `s-<código>`. Validade de 12 h, no máximo 3 sessões ativas por conta, nome de convidado de 1 a 24 caracteres, só o criador encerra, e o passe do convidado não dá acesso a nenhuma conta.
+- **Compose do EasyPanel:** `pull_policy: always` no serviço do Papo, para um redeploy baixar a imagem nova (a tag não muda).
 
-### Fase 1: servidor público
-- **`deploy/`:** `docker-compose.yml`, `Dockerfile`, `Caddyfile` e `livekit.yaml` para rodar o Papo numa VPS, com HTTPS automático e sem Tailscale. Guia em [docs/deploy-vps.md](docs/deploy-vps.md). Ainda não testado numa VPS real.
+### Servidor público na VPS (fase 1)
+- **`deploy/`:** `docker-compose.yml`, `Dockerfile`, `Caddyfile` e `livekit.yaml` para rodar o Papo numa VPS, com HTTPS automático e sem Tailscale. Guia em [docs/deploy-vps.md](docs/deploy-vps.md).
 - **`TRUST_PROXY`:** o servidor lê o IP real de quem chega por trás de um proxy, para o limite de tentativas valer por pessoa.
 - **`PAPO_SETUP_CODE`:** em servidor público, a primeira conta (a dona) só é criada com esse código, para um estranho não chegar antes.
-- Texto da tela de registro ajustado para o código de configuração.
-- **EasyPanel:** `deploy/docker-compose.easypanel.yml` (Papo e LiveKit, sem Caddy, com limites de processador e memória) para VPS que já têm o EasyPanel ocupando as portas 80 e 443. Guia com os dois caminhos em [docs/deploy-vps.md](docs/deploy-vps.md).
+- **EasyPanel:** `deploy/docker-compose.easypanel.yml` (Papo e LiveKit, sem Caddy, com limites de processador e memória) para VPS que já têm o EasyPanel ocupando as portas 80 e 443.
 - **Imagem pronta:** workflow `.github/workflows/papo-image.yml` compila a imagem do servidor no GitHub e publica no ghcr.io, para a VPS não precisar compilar.
-- Plano atualizado: sessões por link passam a vir antes do bot; LiveKit na própria VPS.
-- **Executado numa VPS com EasyPanel (2026-11-20):** imagem baixada, contêineres do Papo e do LiveKit no ar, HTTPS válido, proxy `/lk` até o LiveKit, primeira conta protegida pelo código de configuração e porta TCP 7881 aberta. Ainda falta provar a mídia UDP e o vídeo entre dois PCs. O guia registra os passos que funcionaram (Source por Git com Build Path `/deploy`, "Create .env file" ligado, domínio na porta 38080 e novo deploy).
+- **Executado numa VPS com EasyPanel:** imagem baixada, contêineres do Papo e do LiveKit no ar, HTTPS válido, proxy `/lk` até o LiveKit, primeira conta protegida pelo código de configuração e mídia entre dois computadores em redes diferentes. O guia registra os passos que funcionaram (Source por Git com Build Path `/deploy`, "Create .env file" ligado, domínio na porta 38080 e novo deploy).
 
 ## 0.6.2 (2026-10-24)
 

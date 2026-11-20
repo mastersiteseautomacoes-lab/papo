@@ -2,9 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { api, setToken } from './api'
 
-// Só existe dentro do app instalado (Electron); no navegador a seta não aparece.
-const goHome = (window as unknown as { papo?: { home?: () => Promise<boolean> } }).papo?.home
-
 export default function Login({ onDone, onBack }: { onDone: () => void; onBack?: () => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [username, setUsername] = useState('')
@@ -32,13 +29,9 @@ export default function Login({ onDone, onBack }: { onDone: () => void; onBack?:
 
   return (
     <div className="auth-screen">
-      {onBack ? (
+      {onBack && (
         <button type="button" className="auth-back" onClick={onBack} title="Voltar">
           <ArrowLeft size={18} /> Voltar
-        </button>
-      ) : goHome && (
-        <button type="button" className="auth-back" onClick={() => goHome()} title="Voltar ao início (Hospedar / Entrar)">
-          <ArrowLeft size={18} /> Início
         </button>
       )}
       <form className="auth-card" onSubmit={submit}>

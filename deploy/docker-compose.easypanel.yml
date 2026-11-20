@@ -11,8 +11,8 @@ name: papo
 services:
   papo:
     # Imagem pronta, compilada pelo GitHub (.github/workflows/papo-image.yml). A VPS não compila nada.
-    image: ghcr.io/mastersiteseautomacoes-lab/papo-server:${PAPO_IMAGE_TAG:-companheiro-discord}
-    # A tag "companheiro-discord" é sempre a mais recente. Sem isto, o Docker não baixa de novo uma tag que já tem,
+    image: ghcr.io/mastersiteseautomacoes-lab/papo-server:${PAPO_IMAGE_TAG:-main}
+    # A tag "main" é sempre a mais recente. Sem isto, o Docker não baixa de novo uma tag que já tem,
     # e um redeploy não traria a versão nova.
     pull_policy: always
     restart: unless-stopped

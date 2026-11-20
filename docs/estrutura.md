@@ -9,41 +9,38 @@ Papo/
 ├── src/                  Interface (React + TypeScript)
 │   ├── App.tsx             escolhe a tela: início (/) ou sessão (/j/<código>)
 │   ├── Home.tsx            início: 12 caixas do código, criar sessão, menu da conta
-│   ├── Session.tsx         sessão por link: entrar, cabeçalho, convidar, encerrar
-│   ├── Login.tsx           login e registro (com a seta "Início" no app instalado)
+│   ├── Session.tsx         sessão: nome, cabeçalho, convidar, encerrar
+│   ├── Login.tsx           entrar na conta e registrar
 │   ├── VoiceRoom.tsx       sala: blocos de vídeo, "Sua tela está no ar", controles, selo NO AR
 │   ├── voice.ts            entrar na sala, microfone, câmera, tela, volumes (LiveKit)
-│   ├── api.ts              pedidos HTTP + WebSocket com reconexão
+│   ├── api.ts              pedidos HTTP e token de login
 │   ├── AudioSettings.tsx   tela de áudio e calibração
+│   ├── VolumeMenu.tsx      volume de cada pessoa
 │   ├── audio/              cadeia de tratamento do microfone
-│   └── styles/             tokens.css (design tokens e temas) e app.css
-├── server/               Servidor (Node + Express + WebSocket + SQLite)
-│   ├── index.ts            rotas HTTP, WebSocket, proxy /lk, /api/health
-│   ├── db.ts               tabelas e consultas
-│   └── auth.ts             senhas (scrypt), sessões, limite de tentativas
-├── electron/             App de Windows
-│   ├── main.cjs            janela, bandeja, servidor e LiveKit embutidos, Tailscale, lista de amigos
-│   ├── preload.cjs         ponte segura para a tela inicial
-│   └── launcher.*          tela inicial: Hospedar, Entrar e Amigos
-├── public/               logos e worklets de áudio (portão, seletor de canal, gravador)
-├── assets/               ícones do app (icon.png, icon.ico)
+│   └── styles/             tokens.css (design tokens) e app.css
+├── server/               Servidor (Node + Express + SQLite)
+│   ├── index.ts            rotas HTTP, proxy /lk, /api/health, arquivos da interface
+│   ├── db.ts               tabelas
+│   └── auth.ts             senhas (scrypt), sessões de login, limite de tentativas
+├── public/               logo e worklets de áudio (portão, seletor de canal, gravador)
+├── deploy/               Dockerfile e arquivos de publicação (EasyPanel e VPS limpa)
+├── .github/workflows/    gera a imagem Docker do servidor
 ├── docs/                 documentação (veja docs/README.md)
-├── iniciar.bat           atalho para rodar o servidor pelo código
-└── package.json          scripts, dependências e configuração do instalador
+└── package.json          scripts e dependências
 ```
 
 ## Como as partes se conversam
 
 ```
- launcher (HTML) ──IPC──► main.cjs ──fork──► server/index.ts ──proxy /lk──► livekit-server
-                              │                    ▲
-                              └─ tailscale serve ──┘      navegador/janela ─► React (src/)
+ navegador ──HTTPS──► proxy da VPS ──► papo (server/index.ts) ──proxy /lk──► livekit
+                                         │  └─ entrega a interface (dist/)       ▲
+                                         └─ banco SQLite (volume /data)          │
+ navegador ───────────── mídia: UDP 7882 / TCP 7881 ─────────────────────────────┘
 ```
 
-1. O usuário abre o app. `main.cjs` mostra a tela inicial (`launcher.html`).
-2. Em **Hospedar**, `main.cjs` sobe o LiveKit, depois o servidor (`build/server.cjs`) e publica com `tailscale serve`.
-3. A interface React (`dist/`) é entregue pelo próprio servidor. Ela fala com ele por HTTP e WebSocket.
-4. Voz, vídeo e tela passam pelo LiveKit; o servidor apenas emite o passe (`/api/voice/token`) e faz o proxy em `/lk`.
+1. O navegador abre o endereço. O servidor entrega a interface React (`dist/`).
+2. A interface fala com o servidor por HTTP (contas e sessões) e pede um **passe** para a sala.
+3. Com o passe, o navegador conecta no LiveKit: a sinalização passa pelo `/lk` do Papo, e a mídia vai direto às portas 7882 (UDP) e 7881 (TCP).
 
 Detalhes de cada peça: [arquitetura.md](arquitetura.md).
 
@@ -55,34 +52,17 @@ Está no `.gitignore` e é gerado ou baixado à parte:
 |---|---|
 | `node_modules/` | dependências: `npm install` |
 | `dist/` e `build/` | interface e servidor compilados: `npm run build` e `npm run build:server` |
-| `release/` | instalador gerado: `npm run dist:win` |
-| `vendor/` | `livekit-server.exe`, baixado de github.com/livekit/livekit/releases (veja [desenvolvimento.md](desenvolvimento.md)) |
-| `data/` | banco do modo de desenvolvimento, com contas e mensagens |
+| `vendor/` | `livekit-server.exe`, só para testar a voz no seu PC (veja [desenvolvimento.md](desenvolvimento.md)) |
+| `data/` | banco do modo de desenvolvimento, com as contas e as sessões |
+| `.env` | segredos da publicação (código de configuração, chave e segredo do LiveKit) |
 
-## Onde ficam os arquivos
-
-### No computador de quem desenvolve
-
-| Pasta/arquivo | O que é |
-|---|---|
-| `src/` | Interface (React). `App.tsx`, `Home.tsx`, `Session.tsx`, `VoiceRoom.tsx`, `voice.ts`, `AudioSettings.tsx`, `Login.tsx`, `api.ts` |
-| `src/audio/` | Tratamento de áudio: `pipeline.ts`, `MicProcessor.ts`, `settings.ts`, `calibrate.ts` |
-| `src/styles/` | `tokens.css` (design tokens e temas) e `app.css` |
-| `server/` | Servidor Node: `index.ts`, `db.ts`, `auth.ts` |
-| `electron/` | App desktop: `main.cjs`, `preload.cjs`, `launcher.html/js/css` (tela Hospedar/Entrar) |
-| `public/` | Logos e `worklets/` (portão de ruído, seletor de canal, gravador) |
-| `assets/` | Ícones do app (`icon.png`, `icon.ico`) |
-| `vendor/livekit-server.exe` | Servidor de voz (LiveKit 1.13.10). Não vai para o git |
-| `release/` | Instalador gerado: `Papo Setup 0.6.2.exe` |
-| `data/` | Banco do modo de desenvolvimento (não é o do app instalado) |
-
-### No PC de quem instalou o app
+## Onde ficam os dados
 
 | O que | Onde |
 |---|---|
-| Programa | `C:\Program Files\Papo` (ou a pasta escolhida na instalação) |
-| **Dados do servidor** (contas, canais, mensagens) | `%APPDATA%\Papo\data\papo.db` (normalmente `C:\Users\SEU_USUARIO\AppData\Roaming\Papo\data`) |
-| Configurações do app | `%APPDATA%\Papo\config.json` e `livekit.yaml` (contêm a chave interna do servidor de voz: **não compartilhe**) |
-| Configurações de áudio | Guardadas no próprio app (por servidor ao qual a pessoa se conecta) |
+| Banco do servidor publicado (contas, sessões) | Volume `papo_data` do Docker na VPS (`/data/papo.db`) |
+| Banco do modo de desenvolvimento | `data/papo.db` na pasta do projeto |
+| Segredos da publicação | Variáveis de ambiente do serviço (no EasyPanel, aba **Environment**). Não ficam em arquivo do repositório |
+| Volumes, ajustes de áudio e token de login | `localStorage` do navegador de cada pessoa |
 
-**Backup:** copie a pasta `%APPDATA%\Papo\data` para outro lugar de vez em quando (pendrive, nuvem). Só importa para quem hospeda.
+**Backup:** copie o banco da VPS de vez em quando (veja [deploy-vps.md](deploy-vps.md#atualizar-e-cuidar)).

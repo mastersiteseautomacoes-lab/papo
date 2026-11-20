@@ -1,7 +1,9 @@
 {
   "name": "papo",
   "private": true,
-  "version": "0.6.2",
+  "version": "0.7.0",
+  "description": "Papo — sessões para compartilhar tela, câmera e áudio com quem tem o código",
+  "author": "Papo",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,9 +14,7 @@
     "dev:server": "tsx watch server/index.ts",
     "start": "npm run build && tsx server/index.ts",
     "typecheck:server": "tsc -p tsconfig.server.json",
-    "build:server": "esbuild server/index.ts --bundle --platform=node --format=cjs --target=node24 --outfile=build/server.cjs",
-    "app": "npm run build && npm run build:server && electron .",
-    "dist:win": "npm run build && npm run build:server && electron-builder --win --publish never"
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=cjs --target=node24 --outfile=build/server.cjs"
   },
   "devDependencies": {
     "@sapphi-red/web-noise-suppressor": "^0.4.1",
@@ -23,10 +23,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
-    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^6.1.1",
-    "electron": "^44.9.0",
-    "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
     "express": "^5.3.0",
     "http-proxy": "^1.18.1",
@@ -38,37 +35,6 @@
     "react-dom": "^19.2.8",
     "tsx": "^4.23.15",
     "typescript": "~6.0.2",
-    "vite": "^8.3.0",
-    "ws": "^8.22.0"
-  },
-  "main": "electron/main.cjs",
-  "description": "Papo — chat estilo Discord para amigos",
-  "build": {
-    "appId": "br.papo.chat",
-    "productName": "Papo",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "electron/**",
-      "assets/**",
-      "vendor/**",
-      "build/server.cjs",
-      "dist/**",
-      "package.json"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "perMachine": false,
-      "shortcutName": "Papo"
-    },
-    "asar": false,
-    "icon": "assets/icon.ico"
-  },
-  "author": "Papo"
+    "vite": "^8.3.0"
+  }
 }

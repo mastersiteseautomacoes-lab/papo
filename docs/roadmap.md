@@ -1,15 +1,30 @@
 # Estado atual e roadmap
 
-**Testado:** texto em tempo real, convites, presença, renomear e excluir, voz e vídeo entre dois apps na mesma máquina, compartilhamento de tela (como faixa de vídeo), bandeja, instalador, layout em janelas pequenas, seleção de canal do microfone. Acesso de um Mac pelo navegador ao servidor hospedado no PC, pelo Tailscale (funcionou depois de abrir o Tailscale no Mac). Chamada de voz e compartilhamento de tela **entre dois PCs diferentes pelo Tailscale** (funcionaram; o eco do áudio da tela foi corrigido na 0.6.2).
+## Pronto e testado (versão 0.7.0)
 
-**Ainda não confirmado em uso real:**
-- O fim do eco ao compartilhar a tela (0.6.2): foi medido num teste com o Electron, mas ainda falta repetir numa chamada de verdade.
-- A **lista de Amigos** e a **seta Início** (0.6.0 e 0.6.1): o primeiro teste entre dois PCs mostrou "fora do ar" sem motivo e tela preta ao entrar; a 0.6.1 corrige isso e mostra o motivo. O teste entre dois computadores de verdade, com o anfitrião em Hospedar, ainda precisa ser repetido com a versão mais recente (e a notificação de "voltou ao ar" confirmada).
-- Câmera real e captura de tela real (o menu de escolha de tela/janela no app desktop).
-- Calibração do áudio com a sua voz real depois da correção do canal.
+- **Servidor público na VPS** (EasyPanel, imagem do GitHub): HTTPS válido, proxy `/lk`, primeira conta protegida pelo código de configuração, mídia nas portas 7881 (TCP) e 7882 (UDP). Dois computadores em redes diferentes, sem Tailscale, viram a tela um do outro.
+- **Sessões por código ou link:** criar, consultar, entrar como convidado e com conta, contar pessoas, encerrar, validade de 12 horas, limite de 3 por conta, link com traços e em maiúsculas.
+- **Interface só de sessões:** tela inicial com as 12 caixas, sessão com "Sua tela está no ar", selo NO AR e vídeo inteiro em qualquer tamanho de janela (testado em 5 tamanhos, do celular ao ultralargo).
+- **Áudio da tela sem eco** (`restrictOwnAudio`) e tratamento do microfone (filtros de ruído, portão, ganho, calibração).
+- **Uso real (2026-11-20):** o dono criou uma sessão na VPS e transmitiu a tela de verdade para outro computador, e a tela chegou inteira.
+- **Compatibilidade:** o servidor enxuto abre um banco do servidor antigo sem alterá-lo.
 
-**Ideias futuras:**
-- Atualização automática (com `electron-updater` e GitHub Releases), em vez de reinstalar por cima.
-- Versão para Mac (para poder hospedar), o que exige gerar o `.dmg` num Mac ou na nuvem.
-- Servidor sempre ligado (VPS pequena ou PC velho) para ter histórico único sem depender do PC de ninguém.
-- Mensagens diretas, anexos, reações e emojis (hoje os botões existem na tela, mas são só visuais).
+## Ainda não confirmado em uso real
+
+- Consumo de processador e memória da VPS durante uma call longa, e o efeito nos outros serviços dela.
+- Câmera real e a captura de áudio da tela em Safari e Firefox.
+
+## Próximas fases
+
+O plano completo está em [plano-companheiro-discord.md](plano-companheiro-discord.md).
+
+1. **Login com Discord** (fase 3): entrar com a conta do Discord (escopo `identify`: nome e avatar, o mínimo), sem senha do Papo.
+2. **Bot e entrada automática** (fase 4): um bot no servidor do Discord sabe quem está em qual canal de voz; quem entra na call recebe o link da sessão sozinho, e sair da call encerra.
+3. **Tela e áudio melhores** (fase 5): perfis de qualidade (1080p 60, 1080p 30, 720p 60), escolha da fonte de áudio (sem a voz do Discord) e, se valer a pena, a escolha de tela em galeria.
+4. **Operação** (fase 6): criptografia de ponta a ponta, backups, monitoramento da banda, limite de espectadores por sessão, expulsar pessoa da sessão.
+
+## Ideias futuras
+
+- **Atualização automática do banco** e rotina de backup do volume da VPS.
+- **Aplicativo instalável**, só se o navegador não bastar (hoje o app de Windows antigo está na tag `chat-completo-v0.6.2`).
+- **Limpar as tabelas herdadas** do chat (`channels`, `messages`) num banco antigo, se um dia fizer sentido (hoje elas ficam intactas e não são lidas).
