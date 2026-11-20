@@ -4,15 +4,21 @@ Guia para colocar o Papo numa VPS, com HTTPS, para os amigos entrarem **sem Tail
 
 Há dois caminhos. Use o **A** se a VPS já tem o **EasyPanel** (ele ocupa as portas 80 e 443). Use o **B** numa VPS limpa.
 
-> **Estado:** nada disto foi testado numa VPS real ainda.
+> **Estado (2026-11-20):** o **caminho A foi executado de verdade** numa VPS com EasyPanel 2.38 e funciona até o HTTPS.
 >
-> **Verificado:**
-> - o servidor, com a lógica do código de configuração da primeira conta e do limite de tentativas por IP atrás de proxy (testes locais);
-> - a sintaxe dos dois arquivos `docker-compose` e do workflow do GitHub;
-> - no binário do LiveKit 1.13.10, que a configuração pela variável `LIVEKIT_CONFIG` funciona (o UDP usa só a porta 7882);
-> - que a imagem `livekit/livekit-server:v1.13.10` existe no Docker Hub.
+> **Verificado na VPS:**
+> - a imagem gerada pelo GitHub é baixada e os contêineres do Papo e do LiveKit sobem;
+> - `https://<endereço>/api/health` responde `{"papo":true}`, com certificado válido, vindo da internet;
+> - o proxy `/lk` chega ao LiveKit (responde "OK");
+> - a criação da primeira conta é recusada sem o código de configuração (403);
+> - a porta de mídia **TCP 7881** está aberta para a internet.
 >
-> **Falta verificar:** o build da imagem no GitHub, a visibilidade do pacote no ghcr.io, o HTTPS, a publicação das portas de mídia no EasyPanel e o vídeo passando entre dois PCs pela internet. O teste de aceite (passo final de cada caminho) cobre isso.
+> **Ainda não verificado:**
+> - a mídia **UDP 7882** (um teste simples de STUN ficou sem resposta, o que é inconclusivo);
+> - o vídeo e a tela passando entre dois PCs em redes diferentes (o teste de aceite abaixo);
+> - o consumo de processador e memória durante uma call, e o efeito nos outros serviços da VPS.
+>
+> O caminho B (VPS limpa com Caddy) continua sem teste.
 
 ## O que sobe
 
@@ -36,12 +42,20 @@ Arquivo: [`deploy/docker-compose.easypanel.yml`](../deploy/docker-compose.easypa
 
 ### A2. Gerar a imagem
 1. Envie a branch `companheiro-discord` ao GitHub. O workflow roda sozinho (aba **Actions** do repositório) e publica `ghcr.io/<dono>/papo-server:companheiro-discord`.
-2. Na primeira vez, o pacote nasce **privado**. Em GitHub → seu perfil → **Packages** → `papo-server` → **Package settings** → **Change visibility** → **Public**. Sem isso o EasyPanel não consegue baixar a imagem (a alternativa é cadastrar um registro com um token somente leitura, que vale só para você).
+2. Confirme que o pacote é **público**: na primeira publicação ele pode nascer privado (em GitHub → seu perfil → **Packages** → `papo-server` → **Package settings** → **Change visibility** → **Public**). No nosso teste ele já saiu público e o EasyPanel baixou a imagem sem login. A alternativa é cadastrar um registro no EasyPanel com um token somente leitura, que vale só para você.
 
 ### A3. Criar o serviço no EasyPanel
-1. Projeto "papo" → **+ Serviço** → **Compose**.
-2. Cole o conteúdo de `deploy/docker-compose.easypanel.yml`.
-3. Na aba **Ambiente**, preencha:
+Passos executados de verdade, no EasyPanel 2.38:
+
+1. **Projeto novo** ("papo") e, nele, **Serviço → Compose**, com o nome `papo`.
+2. Aba **Source** → botão **Git** (não cole o YAML: o editor de código do painel não aceita preenchimento simples). Preencha:
+   - **Repository URL:** `https://github.com/<dono>/papo.git`
+   - **Branch:** `companheiro-discord`
+   - **Build Path:** `/deploy`
+   - **Docker Compose File:** `docker-compose.easypanel.yml`
+
+   Salve. O `Build Path` precisa ser `/deploy` porque o EasyPanel grava o arquivo `.env` na pasta do build path, e o Docker Compose procura o `.env` ao lado do arquivo compose. Com `/` o deploy falha.
+3. Aba **Environment**: preencha as três variáveis e **marque a caixa "Create .env file"**. Sem essa caixa, o compose não enxerga as variáveis e o deploy falha com `required variable ... is missing a value`. Salve.
 
    | Variável | Valor |
    |---|---|
@@ -49,15 +63,16 @@ Arquivo: [`deploy/docker-compose.easypanel.yml`](../deploy/docker-compose.easypa
    | `LIVEKIT_API_KEY` | uma chave inventada por você |
    | `LIVEKIT_API_SECRET` | um segredo longo inventado por você |
 
-   Gerar valores aleatórios no PowerShell do seu PC (copie a saída para o campo):
+   Gerar valores aleatórios no PowerShell do seu PC (rode uma vez para cada valor):
 
    ```powershell
    $b = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); ($b | ForEach-Object { $_.ToString('x2') }) -join ''
    ```
 
-   Rode uma vez para cada valor. **Não coloque esses valores em arquivo do projeto nem no Git.**
-4. Aba **Domínios** do serviço Compose: escolha o serviço **`papo`**, porta **38080**, conexão interna **HTTP**, com HTTPS ligado. Para o nome, tente nesta ordem: o endereço automático do EasyPanel (se a sua instalação oferece), depois o nome que o provedor dá à VPS, depois `IP-COM-TRACOS.sslip.io` (por exemplo `203-0-113-5.sslip.io` para o IP `203.0.113.5`). O Traefik obtém o certificado sozinho.
-5. **Implantar** e acompanhe os logs. Os nomes exatos dos botões podem variar com a versão do EasyPanel.
+   **Não coloque esses valores em arquivo do projeto nem no Git.**
+4. Clique em **Deploy** e abra o log: deve terminar em `Success`, com os contêineres `papo` e `livekit` iniciados. Antes do deploy, o painel pode mostrar o aviso "Some issues were found in your Docker Compose configuration": é uma pré-verificação que não enxerga o `.env`; o que vale é o log do deploy.
+5. Aba **Domains**: o EasyPanel já cria um endereço gratuito com HTTPS (`<serviço>-<projeto>.<id>.easypanel.host`). Edite-o: **Port** `38080`, **Compose Service** `papo`, protocolo HTTP. Salve e **faça Deploy de novo**. Antes desse segundo deploy o endereço responde 502.
+6. Teste: `https://<endereço>/api/health` deve mostrar `{"papo":true}`.
 
 ### A4. Cuidar dos outros serviços
 - Os limites do compose (`0,30` núcleo e 300 MB para o Papo; `0,70` núcleo e 600 MB para o LiveKit) são **valores iniciais, ainda não medidos**. Durante a primeira call de teste, olhe o painel do EasyPanel (processador e memória) e confira se o n8n continua respondendo.
@@ -120,6 +135,8 @@ Se o passo 4 mostra a tela dos dois lados, a fase 1 está validada. O app de Win
 |---|---|
 | O site não abre ou o certificado falha | O nome aponta para o IP certo? As portas 80 e 443 estão liberadas? Nos logs do proxy (Traefik ou Caddy) aparece o motivo |
 | O EasyPanel não consegue baixar a imagem | O pacote `papo-server` no GitHub está **Público**? O workflow terminou com sucesso na aba Actions? |
+| O deploy falha com `required variable ... is missing a value` | Marque **Create .env file** na aba Environment e confira se o **Build Path** é `/deploy` (passos A3.2 e A3.3) |
+| O endereço do EasyPanel responde **502** | O domínio precisa apontar para o serviço `papo` na porta `38080`, e é preciso **fazer Deploy de novo** depois de salvar o domínio (A3.5) |
 | Entra na sala, mas a tela não aparece para o outro | Portas 7881/TCP e 7882/UDP liberadas e livres? Logs do `livekit`. Se ele anunciar o IP errado, ajuste `rtc` na configuração (por exemplo `node_ip`) |
 | O EasyPanel não deixa publicar a porta UDP | A documentação do EasyPanel não detalha a escolha de protocolo; se a porta UDP não for publicada, o plano B é o LiveKit Cloud para testes (plano gratuito limitado) |
 | "Muitas tentativas" para todo mundo | `TRUST_PROXY` precisa estar definido no serviço `papo` (já está no compose) |

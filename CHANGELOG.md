@@ -14,6 +14,7 @@ A `main` e a tag `chat-completo-v0.6.2` seguem como o chat completo. Esta branch
 - **EasyPanel:** `deploy/docker-compose.easypanel.yml` (Papo e LiveKit, sem Caddy, com limites de processador e memória) para VPS que já têm o EasyPanel ocupando as portas 80 e 443. Guia com os dois caminhos em [docs/deploy-vps.md](docs/deploy-vps.md).
 - **Imagem pronta:** workflow `.github/workflows/papo-image.yml` compila a imagem do servidor no GitHub e publica no ghcr.io, para a VPS não precisar compilar.
 - Plano atualizado: sessões por link passam a vir antes do bot; LiveKit na própria VPS.
+- **Executado numa VPS com EasyPanel (2026-11-20):** imagem baixada, contêineres do Papo e do LiveKit no ar, HTTPS válido, proxy `/lk` até o LiveKit, primeira conta protegida pelo código de configuração e porta TCP 7881 aberta. Ainda falta provar a mídia UDP e o vídeo entre dois PCs. O guia registra os passos que funcionaram (Source por Git com Build Path `/deploy`, "Create .env file" ligado, domínio na porta 38080 e novo deploy).
 
 ## 0.6.2 (2026-10-24)
 
