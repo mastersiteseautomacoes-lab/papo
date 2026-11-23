@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { ArrowLeft, Check, Link2, LogOut, Settings } from 'lucide-react'
 import { api, type SessionInfo } from './api'
-import { useVoice } from './voice'
+import { useVoice, volumeOf } from './voice'
 import AudioSettings from './AudioSettings'
 import VoiceRoom from './VoiceRoom'
 import VolumeMenu, { type VolumeTarget } from './VolumeMenu'
@@ -156,7 +156,7 @@ export function SessionPage({ code: rawCode }: { code: string }) {
       {volMenu && (
         <VolumeMenu
           target={volMenu}
-          setting={voice.volumes[`${volMenu.identity}:${volMenu.src}`] ?? { vol: 1, muted: false }}
+          setting={volumeOf(voice.volumes, volMenu.identity, volMenu.src)}
           onChange={(patch) => voice.setVolume(volMenu.identity, volMenu.src, patch)}
           onClose={() => setVolMenu(null)}
         />

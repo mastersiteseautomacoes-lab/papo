@@ -2,6 +2,13 @@
 
 Todas as mudanças importantes do Papo. A versão vem de `version` no `package.json`.
 
+## Não lançado
+
+### Volume
+- **Painel "Volumes"** na barra de baixo (ao lado de "Ver minha tela"): lista cada pessoa da sessão com uma barrinha para a **voz** e, quando ela compartilha a tela com som, outra para o **áudio da tela**. É só para você, vai de 0 a 200%, tem silenciar e "Padrão", e funciona também no celular (os controles do bloco só apareciam ao passar o mouse).
+- **O áudio da tela agora começa em 50%** (a voz continua em 100%): o som do computador de quem transmite chegava alto demais. Quem já ajustou o volume de alguém mantém o que escolheu.
+- A **barrinha de volume da transmissão** no bloco da tela fica sempre visível (antes só aparecia ao passar o mouse). O botão direito e o ícone do bloco continuam abrindo o menu de volume.
+
 ## 0.7.0 (2026-11-20): o Papo vira só de sessões, no navegador
 
 O Papo passou a ser um **companheiro de chamadas**: só sessões (tela, câmera e áudio) com um código de 12 letras, num servidor público numa VPS, usado pelo navegador. O chat completo e o app de Windows foram **removidos**; o código antigo continua na tag `chat-completo-v0.6.2`. Plano: [docs/plano-companheiro-discord.md](docs/plano-companheiro-discord.md).

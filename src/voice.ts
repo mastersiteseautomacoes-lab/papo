@@ -12,6 +12,12 @@ export type AudioSource = 'mic' | 'screen'
 export interface VolumeSetting { vol: number; muted: boolean }
 export const MAX_VOLUME = 2 // 200%, como no Discord
 
+/** Volume inicial: a voz começa em 100%; o áudio de uma tela compartilhada chega alto (é o som do computador de
+ *  quem transmite), então começa em 50%. Cada pessoa ajusta e o Papo lembra. */
+export const defaultVolume = (src: AudioSource): VolumeSetting => ({ vol: src === 'screen' ? 0.5 : 1, muted: false })
+export const volumeOf = (volumes: Record<string, VolumeSetting>, identity: string, src: AudioSource): VolumeSetting =>
+  volumes[`${identity}:${src}`] ?? defaultVolume(src)
+
 const VOL_KEY = 'papo.volumes'
 const volKey = (identity: string, src: AudioSource) => `${identity}:${src}`
 
@@ -63,7 +69,7 @@ export function useVoice({ onError, micOnJoin = true }: Options) {
         const t = pub.track as RemoteAudioTrack | undefined
         if (!t) return
         const src: AudioSource = pub.source === Track.Source.ScreenShareAudio ? 'screen' : 'mic'
-        const s = volRef.current[volKey(p.identity, src)] ?? { vol: 1, muted: false }
+        const s = volumeOf(volRef.current, p.identity, src)
         t.setVolume(deafRef.current || s.muted ? 0 : s.vol)
       })
     })
@@ -72,7 +78,7 @@ export function useVoice({ onError, micOnJoin = true }: Options) {
   const setVolume = useCallback((identity: string, src: AudioSource, patch: Partial<VolumeSetting>) => {
     setVolumes((cur) => {
       const k = volKey(identity, src)
-      const base: VolumeSetting = cur[k] ?? { vol: 1, muted: false }
+      const base: VolumeSetting = cur[k] ?? defaultVolume(src)
       const next = { ...cur, [k]: { ...base, ...patch } }
       volRef.current = next
       try { localStorage.setItem(VOL_KEY, JSON.stringify(next)) } catch { /* sem storage */ }

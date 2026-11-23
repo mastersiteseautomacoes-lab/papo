@@ -71,7 +71,7 @@ Como o servidor vai em um arquivo único, todas essas bibliotecas ficam em `devD
 | `src/voice.ts` | Entrar na sala, microfone, câmera, tela, volumes (usa o LiveKit) |
 | `src/Login.tsx` | Entrar na conta e registrar |
 | `src/api.ts` | Fala com o servidor (pedidos HTTP) e guarda o token de login |
-| `src/AudioSettings.tsx`, `src/VolumeMenu.tsx` | Configurações do microfone e menu de volume de cada pessoa |
+| `src/AudioSettings.tsx`, `src/VolumeMenu.tsx`, `src/VolumePanel.tsx` | Configurações do microfone, menu de volume de uma pessoa e painel "Volumes" com todas |
 | `src/audio/*` | Cadeia de tratamento do microfone (veja a seção 7) |
 
 - **Estado:** os dados da tela (quem está na sala, quais vídeos aparecem) ficam em variáveis de estado do React. Quando algo muda, a tela se redesenha sozinha.
@@ -195,7 +195,7 @@ Fluxo:
 
 **Por que o navegador exige HTTPS:** microfone, câmera e tela só são liberados em páginas seguras. O proxy da VPS entrega o HTTPS com certificado válido.
 
-**Volume:** com a opção `webAudioMix`, cada voz passa por um "botão de volume" (GainNode) do navegador. Isso permite ir até 200% e ter um volume separado para a voz e para o áudio da tela de cada pessoa.
+**Volume:** com a opção `webAudioMix`, cada voz passa por um "botão de volume" (GainNode) do navegador. Isso permite ir até 200% e ter um volume separado para a voz e para o áudio da tela de cada pessoa. O padrão é 100% para a voz e 50% para o áudio da tela (`defaultVolume` em `src/voice.ts`).
 
 **Economia de banda:** o cliente usa `adaptiveStream` e `dynacast`, que reduzem a qualidade enviada quando ninguém está vendo.
 

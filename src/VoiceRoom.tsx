@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState, type CSSProperties } from 'react'
 import { Track, type Participant, type Room } from 'livekit-client'
 import { Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, PhoneOff, Headphones, HeadphoneOff, Maximize, Minimize, ZoomIn, ZoomOut, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react'
-import { MAX_VOLUME, type AudioSource, type VoiceState, type VolumeSetting } from './voice'
+import { MAX_VOLUME, volumeOf, type AudioSource, type VoiceState, type VolumeSetting } from './voice'
 import type { VolumeTarget } from './VolumeMenu'
+import VolumePanel from './VolumePanel'
 
 interface Props {
   voice: VoiceState
@@ -150,7 +151,7 @@ function Stage({ voice, onVolumeMenu, previewSelf, onPreviewSelf }: {
 
   const participants: Participant[] = [room.localParticipant, ...room.remoteParticipants.values()]
   const nameOf = (p: Participant) => p.name || 'Convidado'
-  const volOf = (p: Participant, src: AudioSource): VolumeSetting => voice.volumes[`${p.identity}:${src}`] ?? { vol: 1, muted: false }
+  const volOf = (p: Participant, src: AudioSource): VolumeSetting => volumeOf(voice.volumes, p.identity, src)
   /** props de volume do bloco: voz nos blocos de câmera, áudio da tela nos blocos de tela; nada no seu próprio */
   const volProps = (p: Participant, source: Track.Source) => {
     if (p.isLocal) return {}
@@ -215,6 +216,7 @@ function Stage({ voice, onVolumeMenu, previewSelf, onPreviewSelf }: {
 
 export default function VoiceRoom({ voice, onVolumeMenu }: Props) {
   const [previewSelf, setPreviewSelf] = useState(false)
+  const [volumesOpen, setVolumesOpen] = useState(false)
   const [, tick] = useReducer((n: number) => n + 1, 0)
   // enquanto transmite, atualiza de vez em quando a resolução e os quadros por segundo mostrados
   useEffect(() => {
@@ -232,6 +234,7 @@ export default function VoiceRoom({ voice, onVolumeMenu }: Props) {
   return (
     <div className="voice-room">
       <Stage voice={voice} onVolumeMenu={onVolumeMenu} previewSelf={previewSelf} onPreviewSelf={() => setPreviewSelf(true)} />
+      {volumesOpen && <VolumePanel voice={voice} onClose={() => setVolumesOpen(false)} />}
       <div className="voice-controls">
         <div className="vc-status">
           {voice.sharing && <><span className="live-badge">NO AR</span>{stats && <small>{stats}</small>}</>}
@@ -254,6 +257,9 @@ export default function VoiceRoom({ voice, onVolumeMenu }: Props) {
           <button className="vc hangup" onClick={voice.leave} title="Sair da sessão"><PhoneOff size={22} /></button>
         </div>
         <div className="vc-side">
+          <button className="session-btn" onClick={() => setVolumesOpen(true)} title="Volume de cada pessoa e de cada tela, só para você">
+            <Volume2 size={16} /> Volumes
+          </button>
           {voice.sharing && (
             <button className="session-btn" onClick={() => setPreviewSelf((v) => !v)} title="Mostra a sua tela transmitida aqui dentro">
               {previewSelf ? <EyeOff size={16} /> : <Eye size={16} />} {previewSelf ? 'Esconder minha tela' : 'Ver minha tela'}

@@ -1,5 +1,5 @@
 import { Volume2, VolumeX } from 'lucide-react'
-import { MAX_VOLUME, type AudioSource, type VolumeSetting } from './voice'
+import { MAX_VOLUME, defaultVolume, type AudioSource, type VolumeSetting } from './voice'
 
 export interface VolumeTarget {
   identity: string
@@ -16,7 +16,7 @@ interface Props {
   onClose: () => void
 }
 
-/** Volume só para você: 0 a 200% (começa em 100%). */
+/** Volume só para você: 0 a 200% (a voz começa em 100%, o áudio da tela em 50%). */
 export default function VolumeMenu({ target, setting, onChange, onClose }: Props) {
   const pct = Math.round(setting.vol * 100)
   // mantém o menu dentro da janela
@@ -40,7 +40,7 @@ export default function VolumeMenu({ target, setting, onChange, onClose }: Props
           />
           <span className="volume-pct">{setting.muted ? 0 : pct}%</span>
         </div>
-        <button className="link small" onClick={() => onChange({ vol: 1, muted: false })}>Restaurar 100%</button>
+        <button className="link small" onClick={() => onChange(defaultVolume(target.src))}>Restaurar o padrão ({Math.round(defaultVolume(target.src).vol * 100)}%)</button>
       </div>
     </div>
   )

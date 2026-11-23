@@ -15,7 +15,8 @@ Papo/
 │   ├── voice.ts            entrar na sala, microfone, câmera, tela, volumes (LiveKit)
 │   ├── api.ts              pedidos HTTP e token de login
 │   ├── AudioSettings.tsx   tela de áudio e calibração
-│   ├── VolumeMenu.tsx      volume de cada pessoa
+│   ├── VolumeMenu.tsx      volume de uma pessoa (botão direito / ícone no bloco)
+│   ├── VolumePanel.tsx     painel "Volumes": voz e tela de todo mundo
 │   ├── audio/              cadeia de tratamento do microfone
 │   └── styles/             tokens.css (design tokens) e app.css
 ├── server/               Servidor (Node + Express + SQLite)
