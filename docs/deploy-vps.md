@@ -39,7 +39,7 @@ Arquivo: [`deploy/docker-compose.easypanel.yml`](../deploy/docker-compose.easypa
 - **Projeto separado.** Crie um projeto novo ("papo") e não mexa nos serviços existentes.
 
 ### A2. Gerar a imagem
-1. Envie as mudanças à branch `main` do GitHub (num fork ou repositório seu). O workflow roda sozinho (aba **Actions** do repositório) e publica `ghcr.io/<dono>/papo-server:main`. No compose, troque `<dono>` pelo seu usuário do GitHub (a linha `image:` de `docker-compose.easypanel.yml`).
+1. Envie as mudanças à branch `main` do GitHub (num fork ou repositório seu). O workflow roda sozinho (aba **Actions** do repositório) e publica `ghcr.io/<dono>/papo-server:main`. No EasyPanel, defina a variável `PAPO_IMAGE=ghcr.io/<dono>/papo-server` (sem ela, o compose baixa a imagem do projeto original). Passo a passo completo para ter a sua cópia: [replicar.md](replicar.md).
 2. Confirme que o pacote é **público**: na primeira publicação ele pode nascer privado (em GitHub → seu perfil → **Packages** → `papo-server` → **Package settings** → **Change visibility** → **Public**). No nosso teste ele já saiu público e o EasyPanel baixou a imagem sem login. A alternativa é cadastrar um registro no EasyPanel com um token somente leitura, que vale só para você.
 
 ### A3. Criar o serviço no EasyPanel
@@ -60,6 +60,7 @@ Passos executados de verdade, no EasyPanel 2.38:
    | `PAPO_SETUP_CODE` | um código seu, longo (é o "convite" da primeira conta, a dona) |
    | `LIVEKIT_API_KEY` | uma chave inventada por você |
    | `LIVEKIT_API_SECRET` | um segredo longo inventado por você |
+   | `PAPO_IMAGE` (só em fork) | a sua imagem, por exemplo `ghcr.io/seu-usuario/papo-server` |
 
    Gerar valores aleatórios no PowerShell do seu PC (rode uma vez para cada valor):
 

@@ -46,5 +46,7 @@ Mapa completo: [docs/estrutura.md](docs/estrutura.md). Como foi construído: [do
 - **Documentação junto com a mudança:** ao mudar comportamento, atualize o `docs/` correspondente e o [CHANGELOG](CHANGELOG.md) na mesma alteração.
 - **Versão:** o número vem de `version` no `package.json`; ao subir, atualize o CHANGELOG, o README e os documentos que citam a versão, e marque a tag (`vX.Y.Z`).
 - **Publicar:** enviar à `main` gera a imagem no GitHub; depois, reimplante o serviço `papo` no EasyPanel. Veja [docs/deploy-vps.md](docs/deploy-vps.md) e [docs/desenvolvimento.md](docs/desenvolvimento.md).
+- **Branches:** trabalhe na `main`. **Nunca apague a `companheiro-discord` do GitHub**: o clone do EasyPanel da VPS foi feito nela, e sem ela o deploy falha com `Failed to sync changes` (aconteceu em 2026-11-23). Detalhes em [docs/desenvolvimento.md](docs/desenvolvimento.md#branches).
+- **Licença e réplicas:** o projeto é MIT. Quem copia usa a própria imagem (`PAPO_IMAGE`): veja [docs/replicar.md](docs/replicar.md) e mantenha esse guia certo quando mudar o deploy.
 - **Limite conhecido:** `node:sqlite` ainda é experimental no Node.
 - **Licenças:** outros produtos só servem de inspiração de ideia: **não copie código, textos, desenhos nem marca**.

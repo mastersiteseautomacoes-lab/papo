@@ -5,13 +5,17 @@
 #
 # Variáveis (aba "Ambiente" do serviço no EasyPanel, ou um .env ao lado deste arquivo):
 #   PAPO_SETUP_CODE, LIVEKIT_API_KEY, LIVEKIT_API_SECRET   (obrigatórias)
-#   PAPO_IMAGE_TAG, LIVEKIT_VERSION                        (opcionais)
+#   PAPO_IMAGE, PAPO_IMAGE_TAG, LIVEKIT_VERSION            (opcionais)
+#
+# Se você copiou (fork) o projeto, defina PAPO_IMAGE com a SUA imagem, por exemplo
+#   PAPO_IMAGE=ghcr.io/seu-usuario/papo-server
+# (o GitHub a gera no seu repositório; veja docs/replicar.md). Sem isso, baixa a imagem do projeto original.
 name: papo
 
 services:
   papo:
     # Imagem pronta, compilada pelo GitHub (.github/workflows/papo-image.yml). A VPS não compila nada.
-    image: ghcr.io/mastersiteseautomacoes-lab/papo-server:${PAPO_IMAGE_TAG:-main}
+    image: ${PAPO_IMAGE:-ghcr.io/mastersiteseautomacoes-lab/papo-server}:${PAPO_IMAGE_TAG:-main}
     # A tag "main" é sempre a mais recente. Sem isto, o Docker não baixa de novo uma tag que já tem,
     # e um redeploy não traria a versão nova.
     pull_policy: always

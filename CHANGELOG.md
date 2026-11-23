@@ -4,6 +4,15 @@ Todas as mudanças importantes do Papo. A versão vem de `version` no `package.j
 
 ## Não lançado
 
+### Repositório aberto para quem quiser copiar
+- **Licença MIT** (`LICENSE`): antes o projeto dizia "todos os direitos reservados", o que impedia outras pessoas de usá-lo. `package.json` ganhou `license` e `repository`.
+- **Novo guia [docs/replicar.md](docs/replicar.md):** do fork à VPS no ar, com a conta dona, as portas e os testes.
+- **`PAPO_IMAGE`** no `docker-compose.easypanel.yml`: quem copia o projeto aponta para a própria imagem, sem editar o arquivo. Sem a variável, o comportamento é o mesmo de antes.
+- **Workflow `verificar.yml`:** lint, tipos do servidor e build a cada envio e a cada pull request (selo no README).
+- **`CONTRIBUTING.md`** com as regras do projeto e como enviar uma mudança.
+- **Branches documentadas:** a `companheiro-discord` precisa continuar no GitHub (sem ela o deploy do EasyPanel falhou com `Failed to sync changes`); explicado em `docs/desenvolvimento.md` e no `CLAUDE.md`.
+- README, `docs/README.md` e `docs/estrutura.md` atualizados.
+
 ### Volume
 - **Painel "Volumes"** na barra de baixo (ao lado de "Ver minha tela"): lista cada pessoa da sessão com uma barrinha para a **voz** e, quando ela compartilha a tela com som, outra para o **áudio da tela**. É só para você, vai de 0 a 200%, tem silenciar e "Padrão", e funciona também no celular (os controles do bloco só apareciam ao passar o mouse).
 - **O áudio da tela agora começa em 50%** (a voz continua em 100%): o som do computador de quem transmite chegava alto demais. Quem já ajustou o volume de alguém mantém o que escolheu.

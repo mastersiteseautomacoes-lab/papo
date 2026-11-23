@@ -25,8 +25,12 @@ Papo/
 │   └── auth.ts             senhas (scrypt), sessões de login, limite de tentativas
 ├── public/               logo e worklets de áudio (portão, seletor de canal, gravador)
 ├── deploy/               Dockerfile e arquivos de publicação (EasyPanel e VPS limpa)
-├── .github/workflows/    gera a imagem Docker do servidor
+├── .github/workflows/    papo-image.yml (gera a imagem Docker) e verificar.yml (lint, tipos e build)
 ├── docs/                 documentação (veja docs/README.md)
+├── LICENSE               licença MIT
+├── CONTRIBUTING.md       como contribuir
+├── CHANGELOG.md          histórico de versões
+├── CLAUDE.md             guia para quem programa (inclusive o Claude Code)
 └── package.json          scripts e dependências
 ```
 

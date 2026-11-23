@@ -66,7 +66,7 @@ O Papo procura o LiveKit em `LIVEKIT_TARGET` (padrão `http://127.0.0.1:7880`). 
 
 ## Testar
 
-Não há suíte de testes automática. Os testes feitos até agora foram roteiros em Node que sobem o servidor e o LiveKit locais e conferem a API (criar e entrar na sessão, limites, encerramento) e, com um Chrome sem janela, a interface (uma tela falsa de 1920×1080 publicada como compartilhamento de tela, em vários tamanhos de janela). Antes de abrir um PR: `npm run lint`, `npm run build` e `npm run typecheck:server`.
+Não há suíte de testes automática. Os testes feitos até agora foram roteiros em Node que sobem o servidor e o LiveKit locais e conferem a API (criar e entrar na sessão, limites, encerramento) e, com um Chrome sem janela, a interface (uma tela falsa de 1920×1080 publicada como compartilhamento de tela, em vários tamanhos de janela). Antes de abrir um PR: `npm run lint`, `npm run build` e `npm run typecheck:server`. O GitHub repete essas conferências a cada envio e a cada PR (workflow `.github/workflows/verificar.yml`).
 
 ## Lançar uma versão nova
 
@@ -74,6 +74,15 @@ Não há suíte de testes automática. Os testes feitos até agora foram roteiro
 2. Envie para a `main`. O GitHub gera sozinho a imagem `ghcr.io/<dono>/papo-server:main` (aba **Actions**).
 3. No EasyPanel, **reimplante** o serviço `papo`: o compose usa `pull_policy: always`, então ele baixa a imagem nova. O banco (volume `papo_data`) não é tocado.
 4. Marque a versão com uma tag (`git tag vX.Y.Z` e `git push origin vX.Y.Z`).
+
+## Branches
+
+| Branch | O que é |
+|---|---|
+| `main` | A versão atual. Tudo o que vai ao ar sai daqui: o envio gera a imagem Docker e o EasyPanel acompanha esta branch. |
+| `companheiro-discord` | **Não apague.** É uma cópia da `main` (de `a9ee3a8`, não precisa acompanhá-la). O clone do EasyPanel da instância do autor foi feito nela; quando ela foi apagada, o deploy passou a falhar com `Failed to sync changes` e voltou ao recriá-la. Não use para trabalhar: abra o seu trabalho a partir da `main`. |
+
+Se você tem o seu próprio servidor, o mesmo cuidado vale: não apague a branch que foi usada ao criar o serviço no EasyPanel.
 
 ## Tags do Git
 

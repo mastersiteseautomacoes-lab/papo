@@ -1,0 +1,32 @@
+name: Verificações
+
+# Confere o código a cada envio e a cada pull request: estilo (oxlint), tipos do servidor e compilação
+# da interface. Não gera imagem nem publica nada (isso é do papo-image.yml).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verificar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck:server
+      - run: npm run build
+      - run: npm run build:server

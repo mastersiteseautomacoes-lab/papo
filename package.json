@@ -4,6 +4,8 @@
   "version": "0.7.0",
   "description": "Papo — sessões para compartilhar tela, câmera e áudio com quem tem o código",
   "author": "Papo",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/mastersiteseautomacoes-lab/papo.git" },
   "type": "module",
   "scripts": {
     "dev": "vite",

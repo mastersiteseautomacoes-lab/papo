@@ -6,9 +6,9 @@
 
 **Compartilhe a tela, a câmera e o áudio com seus amigos usando só um código de 12 letras. Sem instalar nada: funciona no navegador.**
 
-[Como usar](docs/uso.md) · [Publicar o seu servidor](docs/deploy-vps.md) · [Arquitetura](docs/arquitetura.md) · [Estrutura](docs/estrutura.md) · [Roadmap](docs/roadmap.md)
+[Como usar](docs/uso.md) · [Ter o seu próprio Papo](docs/replicar.md) · [Publicar na VPS](docs/deploy-vps.md) · [Arquitetura](docs/arquitetura.md) · [Estrutura](docs/estrutura.md) · [Roadmap](docs/roadmap.md)
 
-![versão](https://img.shields.io/badge/vers%C3%A3o-0.7.0-5865f2) ![acesso](https://img.shields.io/badge/acesso-pelo%20navegador-2ea44f) ![hospedagem](https://img.shields.io/badge/hospedagem-sua%20VPS%20(Docker)-0078d4) ![linguagem](https://img.shields.io/badge/TypeScript-3178c6)
+[![verificações](https://github.com/mastersiteseautomacoes-lab/papo/actions/workflows/verificar.yml/badge.svg)](https://github.com/mastersiteseautomacoes-lab/papo/actions/workflows/verificar.yml) ![versão](https://img.shields.io/badge/vers%C3%A3o-0.7.0-5865f2) ![acesso](https://img.shields.io/badge/acesso-pelo%20navegador-2ea44f) ![hospedagem](https://img.shields.io/badge/hospedagem-sua%20VPS%20(Docker)-0078d4) ![linguagem](https://img.shields.io/badge/TypeScript-3178c6) [![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-yellow)](LICENSE)
 
 </div>
 
@@ -65,7 +65,7 @@ O servidor do Papo entrega a página e emite um "passe" para cada pessoa entrar 
 
 **Usar** (você só precisa do endereço do servidor de alguém, ou do seu): abra o endereço no navegador, digite o código e entre. [Passo a passo](docs/uso.md).
 
-**Publicar o seu servidor:** o Papo roda em qualquer VPS com Docker, com HTTPS. A imagem do servidor é compilada pelo GitHub, então a VPS não precisa compilar nada. O guia completo (EasyPanel ou VPS limpa, com as portas, as variáveis e o teste de aceite) está em [docs/deploy-vps.md](docs/deploy-vps.md).
+**Ter o seu próprio Papo** (copiar e publicar): faça um **fork** do repositório, deixe o GitHub gerar a imagem Docker, torne-a pública e suba na sua VPS com Docker e HTTPS. O passo a passo, do zero, está em [docs/replicar.md](docs/replicar.md). O guia da publicação em si (EasyPanel ou VPS limpa, com as portas, as variáveis e o teste de aceite) está em [docs/deploy-vps.md](docs/deploy-vps.md).
 
 **Rodar pelo código** (para desenvolver):
 
@@ -86,6 +86,7 @@ A voz precisa de um servidor LiveKit local. Como baixá-lo, como desenvolver com
 | [`public/`](public) | Logo e os programas de áudio que rodam no navegador |
 | [`deploy/`](deploy) | Dockerfile e os arquivos de publicação (EasyPanel e VPS limpa) |
 | [`docs/`](docs) | Toda a documentação |
+| [`.github/workflows/`](.github/workflows) | Gera a imagem Docker e confere o código a cada envio |
 
 O mapa completo, com o que fica de fora do Git: [docs/estrutura.md](docs/estrutura.md).
 
@@ -96,11 +97,12 @@ O mapa completo, com o que fica de fora do Git: [docs/estrutura.md](docs/estrutu
 | Entender o projeto | [Visão geral](docs/visao-geral.md) |
 | Criar ou entrar numa sessão | [Como usar](docs/uso.md) |
 | Configurar o microfone | [Áudio e microfone](docs/audio.md) |
+| Ter o meu próprio Papo (copiar o projeto) | [Ter o seu próprio Papo](docs/replicar.md) |
 | Colocar o meu servidor no ar | [Publicar na VPS](docs/deploy-vps.md) |
 | Resolver um problema | [Solução de problemas](docs/solucao-de-problemas.md) |
 | Saber como foi construído (linguagens, banco, voz, build) | [Arquitetura](docs/arquitetura.md) |
 | Achar um arquivo | [Estrutura do repositório](docs/estrutura.md) |
-| Mexer no código e publicar uma versão | [Desenvolvimento](docs/desenvolvimento.md) |
+| Mexer no código e publicar uma versão | [Desenvolvimento](docs/desenvolvimento.md) e [como contribuir](CONTRIBUTING.md) |
 | Segurança, privacidade e custos | [Segurança](docs/seguranca.md) |
 | O que vem a seguir (login com Discord, bot) | [Roadmap](docs/roadmap.md) e [plano](docs/plano-companheiro-discord.md) |
 | O que mudou em cada versão | [CHANGELOG](CHANGELOG.md) |
@@ -111,6 +113,8 @@ Versão **0.7.0**, no ar numa VPS e em uso entre amigos. Já foram testados: cri
 
 **Versão antiga:** o Papo começou como um chat completo no estilo do Discord (texto, canais, app de Windows hospedado no próprio PC com Tailscale). Esse código está preservado na tag [`chat-completo-v0.6.2`](https://github.com/mastersiteseautomacoes-lab/papo/tree/chat-completo-v0.6.2) e não recebe mais mudanças.
 
+**Branches:** a `main` é a versão atual. A `companheiro-discord` é só uma cópia dela que precisa continuar existindo (o servidor do autor depende dela); veja [as branches](docs/desenvolvimento.md#branches).
+
 ## Licença
 
-Projeto pessoal, ainda sem licença definida. Até que uma seja adicionada, todos os direitos ficam reservados ao autor. O servidor de voz [LiveKit](https://livekit.io) (Apache 2.0) e os filtros de ruído RNNoise e GTCRN (MIT) são de terceiros e mantêm as próprias licenças.
+[MIT](LICENSE): você pode usar, copiar, modificar e distribuir, mantendo o aviso de autoria. O servidor de voz [LiveKit](https://livekit.io) (Apache 2.0) e os filtros de ruído RNNoise e GTCRN (MIT) são de terceiros e mantêm as próprias licenças.
