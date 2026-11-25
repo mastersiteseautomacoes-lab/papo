@@ -20,7 +20,7 @@ O software é todo gratuito (LiveKit sob licença Apache 2.0; RNNoise e GTCRN so
 
 A parte que pesa é a **banda de saída**: o LiveKit recebe a transmissão uma vez e envia uma cópia para cada espectador. Estimativa (depende da cena e da qualidade):
 
-- 1080p a 30 quadros por segundo: alguns Mbps por espectador.
+- 1080p a 30 quadros por segundo: **4 a 5 Mbps por espectador** nos modos Jogo (5) e Texto (4) do Papo.
 - Um transmissor e 4 espectadores por 3 horas, todo dia: na ordem de **centenas de GB por mês**.
 
 Por isso, ao escolher a VPS, a **franquia de tráfego mensal** pesa mais que o processador. O LiveKit só repassa a mídia (não recodifica), então uma VPS pequena basta para um grupo pequeno. Veja a conta completa no [plano](plano-companheiro-discord.md#5-custos-e-banda) e confirme preços e franquia no site do provedor.

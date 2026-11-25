@@ -77,7 +77,8 @@ Como o servidor vai em um arquivo único, todas essas bibliotecas ficam em `devD
 - **Estado:** os dados da tela (quem está na sala, quais vídeos aparecem) ficam em variáveis de estado do React. Quando algo muda, a tela se redesenha sozinha.
 - **Ícones:** lucide (traço linear). **Fonte:** Inter.
 - **Vite** monta tudo em `dist/` (HTML, JS e CSS prontos), que o servidor entrega a quem abre o endereço.
-- **Compartilhar tela:** 1920×1080 a 30 quadros por segundo, com dica de conteúdo "detalhe" (prioriza nitidez) e `restrictOwnAudio`, que tira o áudio do próprio Papo da captura (acaba o eco). O áudio da tela não recebe cancelamento de eco, supressão de ruído nem ganho automático.
+- **Compartilhar tela:** captura de 1920×1080 a 30 quadros por segundo e `restrictOwnAudio`, que tira o áudio do próprio Papo da captura (acaba o eco). O áudio da tela não recebe cancelamento de eco, supressão de ruído nem ganho automático.
+- **Como a tela é enviada (modos Jogo e Texto, `SCREEN_MODES` em `src/voice.ts`):** o padrão do LiveKit para tela é 1080p a **15 quadros** e 2,5 Mbps, e isso limitava a transmissão mesmo com a captura a 30. O Papo define o envio explicitamente: **Jogo** = 30 quadros, 5 Mbps, VP8, dica de conteúdo "movimento" e prioridade para a fluidez (o VP8 pesa pouco no computador de quem joga); **Texto** = 30 quadros, 4 Mbps, VP9, dica "detalhe" e prioridade para a nitidez (o VP9 comprime melhor e a imagem quase parada custa pouco). O modo escolhido fica no `localStorage` e vale ao começar a compartilhar.
 - **Vídeo inteiro em qualquer janela:** o vídeo preenche o bloco por posicionamento absoluto com `object-fit: contain`, sem influenciar o tamanho do bloco. Assim, em janelas largas, a altura do vídeo não passa do bloco nem é cortada.
 
 ---

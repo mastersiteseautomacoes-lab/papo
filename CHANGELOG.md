@@ -4,6 +4,11 @@ Todas as mudanças importantes do Papo. A versão vem de `version` no `package.j
 
 ## Não lançado
 
+### Tela compartilhada mais fluida
+- **Corrigido: a tela saía a 15 quadros por segundo.** Mesmo capturando a 30, o LiveKit enviava com o padrão dele para tela (1080p a 15 fps e 2,5 Mbps), e jogos ficavam travados em movimento. Agora o envio é definido pelo Papo: 30 quadros por segundo e 4 a 5 Mbps.
+- **Modos Jogo e Texto** (seletor ao lado de "Compartilhar tela"): Jogo = VP8, 5 Mbps, prioridade para a fluidez; Texto = VP9, 4 Mbps, prioridade para a nitidez. O modo fica salvo no navegador e aparece no selo NO AR.
+- Cada espectador passa a consumir cerca de 4 a 5 Mbps da banda de saída da VPS (antes, 2,5).
+
 ### Repositório aberto para quem quiser copiar
 - **Licença MIT** (`LICENSE`): antes o projeto dizia "todos os direitos reservados", o que impedia outras pessoas de usá-lo. `package.json` ganhou `license` e `repository`.
 - **Novo guia [docs/replicar.md](docs/replicar.md):** do fork à VPS no ar, com a conta dona, as portas e os testes.

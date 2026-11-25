@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState, type CSSProperties } from 'react'
 import { Track, type Participant, type Room } from 'livekit-client'
 import { Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, PhoneOff, Headphones, HeadphoneOff, Maximize, Minimize, ZoomIn, ZoomOut, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react'
-import { MAX_VOLUME, volumeOf, type AudioSource, type VoiceState, type VolumeSetting } from './voice'
+import { MAX_VOLUME, SCREEN_MODES, volumeOf, type AudioSource, type ScreenMode, type VoiceState, type VolumeSetting } from './voice'
 import type { VolumeTarget } from './VolumeMenu'
 import VolumePanel from './VolumePanel'
 
@@ -237,7 +237,7 @@ export default function VoiceRoom({ voice, onVolumeMenu }: Props) {
       {volumesOpen && <VolumePanel voice={voice} onClose={() => setVolumesOpen(false)} />}
       <div className="voice-controls">
         <div className="vc-status">
-          {voice.sharing && <><span className="live-badge">NO AR</span>{stats && <small>{stats}</small>}</>}
+          {voice.sharing && <><span className="live-badge">NO AR</span>{stats && <small>{stats} · {SCREEN_MODES[voice.screenMode].label}</small>}</>}
         </div>
         <div className="vc-main">
           <button className={`vc ${voice.micOn ? '' : 'off'}`} onClick={voice.toggleMic} title={voice.micOn ? 'Silenciar microfone' : 'Ligar microfone'}>
@@ -252,7 +252,17 @@ export default function VoiceRoom({ voice, onVolumeMenu }: Props) {
           {voice.sharing ? (
             <button className="vc-pill stop" onClick={voice.toggleScreen} title="Parar de compartilhar a tela"><MonitorOff size={20} /> Parar tela</button>
           ) : canShare && (
-            <button className="vc-pill" onClick={voice.toggleScreen} title="Compartilhar a tela"><MonitorUp size={20} /> Compartilhar tela</button>
+            <>
+              <div className="mode-switch" role="group" aria-label="Tipo de transmissão">
+                {(Object.keys(SCREEN_MODES) as ScreenMode[]).map((m) => (
+                  <button key={m} className={voice.screenMode === m ? 'on' : ''} onClick={() => voice.setScreenMode(m)}
+                    title={m === 'game' ? 'Jogo e vídeo: prioriza a fluidez (30 quadros por segundo)' : 'Texto e programas: prioriza a nitidez'}>
+                    {SCREEN_MODES[m].label}
+                  </button>
+                ))}
+              </div>
+              <button className="vc-pill" onClick={voice.toggleScreen} title="Compartilhar a tela"><MonitorUp size={20} /> Compartilhar tela</button>
+            </>
           )}
           <button className="vc hangup" onClick={voice.leave} title="Sair da sessão"><PhoneOff size={22} /></button>
         </div>

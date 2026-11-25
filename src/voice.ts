@@ -18,6 +18,19 @@ export const defaultVolume = (src: AudioSource): VolumeSetting => ({ vol: src ==
 export const volumeOf = (volumes: Record<string, VolumeSetting>, identity: string, src: AudioSource): VolumeSetting =>
   volumes[`${identity}:${src}`] ?? defaultVolume(src)
 
+/** Como a tela é enviada. Sem isto o LiveKit usa o padrão dele para tela: 1080p a **15 quadros** e 2,5 Mbps.
+ *  - Jogo: 30 quadros e 5 Mbps, priorizando a fluidez (VP8, que pesa pouco no computador de quem joga).
+ *  - Texto: 30 quadros e 4 Mbps, priorizando a nitidez (VP9 comprime melhor e a imagem quase parada custa pouco). */
+export type ScreenMode = 'game' | 'text'
+export const SCREEN_MODES = {
+  game: { label: 'Jogo', hint: 'motion', codec: 'vp8', maxBitrate: 5_000_000, degradation: 'maintain-framerate' },
+  text: { label: 'Texto', hint: 'detail', codec: 'vp9', maxBitrate: 4_000_000, degradation: 'maintain-resolution' },
+} as const
+const MODE_KEY = 'papo.screenMode'
+function loadScreenMode(): ScreenMode {
+  try { return localStorage.getItem(MODE_KEY) === 'text' ? 'text' : 'game' } catch { return 'game' }
+}
+
 const VOL_KEY = 'papo.volumes'
 const volKey = (identity: string, src: AudioSource) => `${identity}:${src}`
 
@@ -234,24 +247,36 @@ export function useVoice({ onError, micOnJoin = true }: Options) {
     rerender()
   }, [onError])
 
+  // modo da transmissão (jogo ou texto), lembrado entre sessões; vale na próxima vez que compartilhar
+  const [screenMode, setScreenModeState] = useState<ScreenMode>(loadScreenMode)
+  const setScreenMode = useCallback((m: ScreenMode) => {
+    setScreenModeState(m)
+    try { localStorage.setItem(MODE_KEY, m) } catch { /* sem storage */ }
+  }, [])
+
   const toggleScreen = useCallback(async () => {
     const lp = roomRef.current?.localParticipant
     if (!lp) return
+    const mode = SCREEN_MODES[screenMode]
     try {
       await lp.setScreenShareEnabled(!lp.isScreenShareEnabled, {
         // restrictOwnAudio tira do áudio da tela tudo o que o próprio Papo toca (a voz dos amigos);
         // sem isso, o amigo se ouvia de volta na transmissão. Os filtros de voz ficam desligados
         // porque estragam música e vídeo.
         audio: { restrictOwnAudio: true, echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-        contentHint: 'detail',
+        contentHint: mode.hint,
         resolution: { width: 1920, height: 1080, frameRate: 30 },
+      }, {
+        videoCodec: mode.codec,
+        screenShareEncoding: { maxBitrate: mode.maxBitrate, maxFramerate: 30 },
+        degradationPreference: mode.degradation,
       })
     } catch (e) {
       // cancelar o seletor de tela não é erro
       if (!(e instanceof Error) || !/permission|denied|abort|cancel/i.test(`${e.name} ${e.message}`)) onError('Não consegui compartilhar a tela.')
     }
     rerender()
-  }, [onError])
+  }, [onError, screenMode])
 
   const room = roomRef.current
   const lp = room?.localParticipant
@@ -260,7 +285,7 @@ export function useVoice({ onError, micOnJoin = true }: Options) {
     micOn: !!lp?.isMicrophoneEnabled,
     camOn: !!lp?.isCameraEnabled,
     sharing: !!lp?.isScreenShareEnabled,
-    volumes, setVolume,
+    volumes, setVolume, screenMode, setScreenMode,
     joinSession, leave, toggleMic, toggleDeafen, toggleCamera, toggleScreen,
   }
 }

@@ -444,6 +444,15 @@ select { font: inherit; color: inherit; }
 
 .vc-pill:hover { background: var(--brand-hover); }
 
+/* Jogo / Texto: como a tela é enviada (vale ao começar a compartilhar) */
+.mode-switch { display: inline-flex; padding: 3px; border-radius: 20px; background: var(--background-base-low); border: 1px solid var(--border-subtle); }
+
+.mode-switch button { height: 34px; padding: 0 var(--space-3); border-radius: 17px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
+
+.mode-switch button:hover { color: var(--text-strong); }
+
+.mode-switch button.on { background: var(--brand); color: #fff; }
+
 .vc-pill.stop { background: var(--red-500); }
 
 .vc-pill.stop:hover { background: #d83a3e; }

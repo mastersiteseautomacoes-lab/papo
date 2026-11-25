@@ -27,6 +27,8 @@ Quem recebeu o **link** (`…/j/abcd-efgh-jkmn`) abre direto na sessão e só es
 
 ## Dicas para transmitir
 
+- **Jogo ou Texto:** ao lado de **Compartilhar tela** há duas opções. **Jogo** (padrão) envia a 30 quadros por segundo com até 5 Mbps e dá fluidez a jogos e vídeos. **Texto** usa até 4 Mbps e prioriza a nitidez (código, documentos, apresentações). A escolha vale ao começar a compartilhar e fica salva no navegador; para trocar no meio, pare e compartilhe de novo.
+
 - No navegador, escolha **Tela inteira**, **Janela** ou **Aba**. Para levar o **som do computador**, marque a opção de compartilhar o áudio na janela de escolha do navegador (no Chrome e no Edge, no Windows, ela existe para tela inteira e para abas).
 - O Papo exclui o **próprio áudio** da captura (a voz dos amigos na chamada), para ninguém se ouvir de volta. O som de outros programas (um jogo, um vídeo) continua indo.
 - Use **fones** quando estiver com o microfone ligado, para a voz dos outros não voltar pelo microfone.
